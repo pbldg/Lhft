@@ -8,9 +8,6 @@ import com.xmzy.frameext.simpledb.DBDYPO;
 import com.xmzy.framework.context.ActionContext;
 import org.apache.commons.lang.StringUtils;
 
-/**
- * Created by Administrator on 2015/4/1.
- */
 @Service(name="back.fin_ins")
 public class FinancialInstitutionService extends BusinessServices {
 
@@ -62,9 +59,9 @@ public class FinancialInstitutionService extends BusinessServices {
             result = DBDYDao.insert(actionContext.getConnection(), financialInstitution);
         }
         if (0 == result) {
-            setMessage(actionContext, "保存金融机构失败!");
+            setMessage(actionContext, "淇濆瓨閲戣瀺鏈烘瀯澶辫触!");
         } else {
-            setMessage(actionContext, "保存金融机构成功!");
+            setMessage(actionContext, "淇濆瓨閲戣瀺鏈烘瀯鎴愬姛!");
         }
 
         return CONST_RESULT_AJAX;
@@ -86,13 +83,13 @@ public class FinancialInstitutionService extends BusinessServices {
                     po.set(KEY_FIELD, fId);
                     result = DBDYDao.delete(actionContext.getConnection(), po);
                     if (result == 0) {
-                        setMessage(actionContext, "删除金融机构失败");
+                        setMessage(actionContext, "鍒犻櫎閲戣瀺鏈烘瀯澶辫触");
                         return CONST_RESULT_AJAX;
                     }
                 }
             }
         }
-        setMessage(actionContext, "删除金融机构成功");
+        setMessage(actionContext, "鍒犻櫎閲戣瀺鏈烘瀯鎴愬姛");
         return CONST_RESULT_AJAX;
     }
 
@@ -103,24 +100,21 @@ public class FinancialInstitutionService extends BusinessServices {
         if (StringUtils.isNotEmpty(fId)) {
 
             if("read".equalsIgnoreCase(actionContext.getStringValue(CONST_RESOURCEAUTH))) {
-                //�鿴
                 checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_ONE);
             } else {
-                // �޸�
                 checkAuth(actionContext,AUTH_FUNC_NO, RIGHT_FOUR);
             }
 
             DBDYPO[] pos = DBDYDao.selectByID(actionContext.getConnection(), po);
 
             if(pos.length == 0) {
-                actionContext.setErrorContext("您所选择的金融机构已被删除");
+                actionContext.setErrorContext("鎮ㄦ墍閫夋嫨鐨勯噾铻嶆満鏋勫凡琚垹闄�");
                 return CONST_RESULT_ERROR;
             }
             DBDYPO old = pos[0];
             old.setCmd("U");
             actionContext.setObjValue("FINANCIAL_INSTITUTION_BEAN", old);
         } else {
-            // ����
             checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_TWO);
             po.setCmd("A");
             actionContext.setObjValue("FINANCIAL_INSTITUTION_BEAN", po);
