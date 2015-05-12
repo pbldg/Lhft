@@ -39,7 +39,7 @@ public class FinancialInstitutionService extends BusinessServices {
 
         querySql = sql.toString();
 
-        return CONST_RESULT_AJAX;
+          return CONST_RESULT_AJAX;
     }
 
     @Override

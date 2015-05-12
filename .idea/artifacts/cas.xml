@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="cas">
+    <output-path>$PROJECT_DIR$/out/artifacts/cas</output-path>
+    <root id="root">
+      <element id="dir-copy" path="$PROJECT_DIR$/cas" />
+    </root>
+  </artifact>
+</component>

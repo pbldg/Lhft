@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="sso">
+    <output-path>$PROJECT_DIR$/out/artifacts/sso</output-path>
+    <root id="root">
+      <element id="dir-copy" path="$PROJECT_DIR$/sso" />
+    </root>
+  </artifact>
+</component>
