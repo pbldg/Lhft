@@ -8,7 +8,10 @@ import com.xmzy.frameext.simpledb.DBDYPO;
 import com.xmzy.framework.context.ActionContext;
 import org.apache.commons.lang.StringUtils;
 
-@Service(name="back.fin_ins")
+/**
+ * Created by Administrator on 2015/4/1.
+ */
+@Service(name = "back.fin_ins")
 public class FinancialInstitutionService extends BusinessServices {
 
     private final static String AUTH_FUNC_NO = "back.fin_ins";
@@ -36,7 +39,7 @@ public class FinancialInstitutionService extends BusinessServices {
 
         querySql = sql.toString();
 
-          return CONST_RESULT_AJAX;
+        return CONST_RESULT_AJAX;
     }
 
     @Override
@@ -59,9 +62,9 @@ public class FinancialInstitutionService extends BusinessServices {
             result = DBDYDao.insert(actionContext.getConnection(), financialInstitution);
         }
         if (0 == result) {
-            setMessage(actionContext, "淇濆瓨閲戣瀺鏈烘瀯澶辫触!");
+            setMessage(actionContext, "保存金融机构失败!");
         } else {
-            setMessage(actionContext, "淇濆瓨閲戣瀺鏈烘瀯鎴愬姛!");
+            setMessage(actionContext, "保存金融机构成功!");
         }
 
         return CONST_RESULT_AJAX;
@@ -75,7 +78,7 @@ public class FinancialInstitutionService extends BusinessServices {
 
         int result;
         if (StringUtils.isNotBlank(fIdStr)) {
-            String []fIds = fIdStr.split(",");
+            String[] fIds = fIdStr.split(",");
             result = 0;
             for (String fId : fIds) {
                 if (StringUtils.isNotBlank(fId)) {
@@ -83,13 +86,13 @@ public class FinancialInstitutionService extends BusinessServices {
                     po.set(KEY_FIELD, fId);
                     result = DBDYDao.delete(actionContext.getConnection(), po);
                     if (result == 0) {
-                        setMessage(actionContext, "鍒犻櫎閲戣瀺鏈烘瀯澶辫触");
+                        setMessage(actionContext, "删除金融机构失败");
                         return CONST_RESULT_AJAX;
                     }
                 }
             }
         }
-        setMessage(actionContext, "鍒犻櫎閲戣瀺鏈烘瀯鎴愬姛");
+        setMessage(actionContext, "删除金融机构成功");
         return CONST_RESULT_AJAX;
     }
 
@@ -99,22 +102,25 @@ public class FinancialInstitutionService extends BusinessServices {
         String fId = request.getParameter("F_ID");
         if (StringUtils.isNotEmpty(fId)) {
 
-            if("read".equalsIgnoreCase(actionContext.getStringValue(CONST_RESOURCEAUTH))) {
+            if ("read".equalsIgnoreCase(actionContext.getStringValue(CONST_RESOURCEAUTH))) {
+
                 checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_ONE);
             } else {
-                checkAuth(actionContext,AUTH_FUNC_NO, RIGHT_FOUR);
+
+                checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_FOUR);
             }
 
             DBDYPO[] pos = DBDYDao.selectByID(actionContext.getConnection(), po);
 
-            if(pos.length == 0) {
-                actionContext.setErrorContext("鎮ㄦ墍閫夋嫨鐨勯噾铻嶆満鏋勫凡琚垹闄�");
+            if (pos.length == 0) {
+                actionContext.setErrorContext("您所选择的金融机构已被删除");
                 return CONST_RESULT_ERROR;
             }
             DBDYPO old = pos[0];
             old.setCmd("U");
             actionContext.setObjValue("FINANCIAL_INSTITUTION_BEAN", old);
         } else {
+
             checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_TWO);
             po.setCmd("A");
             actionContext.setObjValue("FINANCIAL_INSTITUTION_BEAN", po);
