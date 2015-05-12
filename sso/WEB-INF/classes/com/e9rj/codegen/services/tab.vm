@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript">
+    var gridHeight=0;//必须要，用于计算grid高度
+	jQuery(document).ready(function () {
+		//author(auth);
+		jQuery.grid(
+				"gridTable",
+				queryAction + "&TABID=#{${info.get('TABLENAME')}_BEAN.get('TABID')}",
+				jQuery("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'['+##
+						#foreach($col in $colList)
+							#if($velocityCount==1)
+
+							' {name:"$col.get('FIELDNAME')",index:"$col.get('FIELDNAME')",label:"$col.get('CNNAME')"}' +##
+							#else
+							
+							',{name:"$col.get('FIELDNAME')",index:"$col.get('FIELDNAME')",label:"$col.get('CNNAME')"}' +##
+							#end
+						#end
+
+						']'
+						)},
+			    	onSelectRow:function(rowid){},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable",rowid);
+			    		var rowData = jQuery("#gridTable").jqGrid("getRowData", rowid);  
+						var url = gotoAction;##
+						#foreach($key in $keyList)
+						
+						url = url + "&$key="+rowData.$key;##
+						#end
+
+						popReadInfo(url,"查看信息",globalPopWidth,globalPopHeightTinny);
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv','contentDiv',true);
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");	
+			    	}
+				});
+		
+		//end
+		jQuery( "#buttonset" ).buttonset();
+	    //resize绑定
+		jQuery(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv',true);});
+		//把按钮拷到主页面
+		jQuery("#buttonDiv").html("").append(jQuery("#buttonset"));
+		//初始化按钮事件
+		initBtn();
+	});
+    </script>
+</head>
+<body >
+    <div id="contentDiv" tabLogo="#{tabLogo}">
+		<table id="gridTable"></table>  
+        <div id="gridPager" style="height: 36px"></div>
+		<span id="buttonset">
+			<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="updateBtn" rightval="4"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>修改</button>
+			<button id="readBtn" rightval="1"><span class="ui-icon ui-icon-newwin" style="float: left;"></span>查看</button>
+			<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+		</span>
+    </div>
+</body>
+</html>

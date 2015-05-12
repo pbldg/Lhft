@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.usercode";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.usercode";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.usercode";
+    //过滤按钮权限
+	var auth = "#{RESOURCE_AUTH}";
+	$(document).ready(function () {
+		//主题切换
+		addThemeSwitcher('#ui-layout-center',{ top: '0px', right: '0px' });
+		//tab组件初始化
+		if($("#contentTabs").html()!=null){
+			$( "#contentTabs").tabs({
+				ajaxOptions: {
+					error: function( xhr, status, index, anchor ) {
+						$( anchor.hash ).html(
+							"加载出错" );
+					}
+				}
+			});
+			//移去tabs的ui-widget-header样式
+			$( "#contentTabs > ul").removeClass("ui-widget-header");
+			$( "#contentTabs > ul").addClass("ui-widget-content");
+			$(".ui-tabs-panel").css("padding","0").css("padding-top","2px");
+		}
+
+		$( "input:button, button", "div" ).button();
+		$('#contentTabs').bind('tabsselect', function(event, ui) {
+			   $("#buttons").append($("#buttonset"));
+			   var pan = $(".ui-tabs-panel");
+			   for(var i=0;i<pan.length;i++){
+		    		pan.html("");
+		       }
+			   //注意：以下代码针对当前业务逻辑
+			   $("#SCATEGORYNO").get(0).selectedIndex=ui.index;
+		});
+		//当系统代码分组改变时，改变选中的tab页
+		$("#SCATEGORYNO").change(function(){
+			$('#contentTabs').tabs('select', $("#SCATEGORYNO").get(0).selectedIndex);
+		});
+	});
+	function initBtn(){
+		$( "#buttonset" ).buttonset();
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		
+		//新增按钮
+		$("#addBtn").click(function(){
+			toAdd();
+		});
+		
+		
+		//删除按钮
+		$("#delBtn").click(function(e){
+			$.uiconfirm("确定要删除吗？", "确认提示",
+				      function() {
+							delCode()
+				      },
+				      function() {
+				        //取消删除
+				      });
+		});
+	}
+    </script>
+</head>
+<body class="demo-single">
+
+    <div class="ui-layout-center">
+            <!-- Begin demo markup -->
+            <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+				<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+						所属分类：
+						<select id="SCATEGORYNO" style="width: 300px;" name="SCATEGORYNO">
+						</select>
+						<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+					</form>
+				</div>
+				</fieldset>
+			</div>
+			<script type="text/javascript">
+				createSelectCondition();
+			</script>
+
+			<div id="contentTabs">
+				<ul style="display:none;">
+					<looptag item="var" for1="0" for2="CODECATEGORY_LIST.size()-1">
+						<LI label="#{CODECATEGORY_LIST[var].get('CNAME')}"><A href="HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.usercode&CMD=Q&CNO=#{CODECATEGORY_LIST[var].get('CNO')}">#{CODECATEGORY_LIST[var].get('CNAME')}</A></LI>
+					</looptag>
+				</ul>
+			</div>
+			<div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;"></div>
+    </div>
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="SCATEGORYNO" codesrcsql="select CNO,CNAME from TS_CODECATEGORY WHERE CODETYPE IN('2','3')"/>
+<!--Form Setting End-->

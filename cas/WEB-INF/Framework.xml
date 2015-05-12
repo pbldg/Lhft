@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Config>
+	<Channel id="chn_http">
+		<SessionContext>
+		</SessionContext>
+	</Channel>
+
+	<Service id="MessageService" classname="com.xmzy.framework.service.MessageService">
+		<Param name="StartService" value="true" />
+		<!-- framework -->
+		<Param name="framework" value="/WEB-INF/framework.properties" />
+		<Param name="memcached" value="/WEB-INF/properties/memcached.properties" />
+	</Service>
+ 
+	<Service id="SimpledbService" classname="com.xmzy.frameext.simpledb.service.SimpledbService">
+		<Param name="StartService" value="true" />
+		<Param name="default" value="true" />
+		<Param name="class" value="com.mysql.jdbc.Driver" />
+		<Param name="url"  value="jdbc:mysql://localhost:3306/sso?useunicode=true&amp;characterEncoding=utf-8"></Param>
+		<Param name="user" value="root" />
+		<Param name="password" value="654321" />
+		<Param name="type" value="mysql" />
+		<Param name="usedbpool" value="true" />
+		<Param name="filters" value="stat" />
+		<!-- 连接池最大使用连接数量 -->
+		<Param name="maxActive" value="100" />
+		<!-- 初始化大小  -->
+		<Param name="initialSize" value="2" />
+		<Param name="maxWait" value="30000" />
+		<!-- 连接池最小空闲 -->
+		<Param name="minIdle" value="2" />
+		<Param name="timeBetweenEvictionRunsMillis" value="60000" />
+		<Param name="minEvictableIdleTimeMillis" value="300000" />
+		<!-- mysql 建议为 false, oracle 建议为 true; -->
+		<Param name="poolPreparedStatements" value="false" />
+		<Param name="maxOpenPreparedStatements" value="20" />
+		<!-- 对于长时间不使用的连接强制关闭 -->
+		<Param name="removeAbandoned" value="true" />
+		<!-- 超过1小开始关闭空闲连接 -->
+		<Param name="removeAbandonedTimeout" value="3600" />
+		<Param name="logAbandoned" value="true" />
+	</Service>
+	
+
+	<Service id="FormService" classname="com.xmzy.frameext.form.service.FormService">
+		<Param name="StartService" value="true" />
+		<Param name="usecache" value="false" />
+		<Param name="validatesymbol" value="*" />
+		<Param name="requiredcolor" value="red" />
+		<Param name="checkcolor" value="cray" />
+	</Service>
+	<Service id="LogService" classname="com.xmzy.framework.log.businesslog.BusinessLogService">
+	<!-- 需要输出哪种类型的才配置,可以添加自定义的log，需要实现BusinessLog接口 -->
+		<Param name="log" value="com.e9rj.platform.log.Log"></Param>
+	</Service>
+	
+	<Service id="ServiceScanner" classname="com.xmzy.frameext.business.service.ServiceScanner">
+		<Param name="devMode" value="true" />
+		<Param name="servicepackage1" value="com.e9rj" />
+	</Service>
+	<Service id="ThreadPoolService" classname="com.xmzy.frameext.thread.ThreadPoolService">
+		<Param name="corePoolSize" value="8" />
+		<Param name="maximumPoolSize" value="16" />
+		<Param name="keepAliveTime" value="1" /><!-- 单位：小时 -->
+	</Service>
+</Config>

@@ -1,0 +1,36 @@
+	<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/layout-default-latest.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+    <!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+	<link rel="stylesheet" href="/e9common/jquery/validate/css/template.css" type="text/css"/>
+	
+    <link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+    
+    <script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery.ui.datepicker.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery.ui.datepicker-zh-CN.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script> 
+    
+    <script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	
+	<script type="text/javascript" src="/e9common/js/uiwindow.js"></script> 
+    <script type="text/javascript" src="/e9common/js/uitables.js"></script> 
+    <script src="/e9common/js/common.js" type="text/javascript"></script>
+    <script type="text/javascript" src="/e9common/js/jquery.util.js"></script>  
+    <script type="text/javascript" src="/e9common/js/uigrid.js"></script> 
+    <!-- 树的相关设置 -->
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			//初始化日期控件
+			initDatePicker('/e9common/images/date.gif');
+			
+			//初始化时间控件后，隐藏div
+			$('#ui-datepicker-div').hide();
+			//日期居中
+			setMiddle();
+		});
+	</script>

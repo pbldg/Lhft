@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">    
+  
+<globalConfiguration>  
+  <parameter name="sendMultiRefs" value="true"/>  
+  <parameter name="disablePrettyXML" value="true"/>  
+  <parameter name="dotNetSoapEncFix" value="true"/>  
+  <parameter name="enableNamespacePrefixOptimization" value="false"/>  
+  <parameter name="sendXMLDeclaration" value="true"/>  
+  <parameter name="sendXsiTypes" value="true"/>  
+  <parameter name="attachments.implementation" value="org.apache.axis.attachments.AttachmentsImpl"/>  
+</globalConfiguration>  
+  
+  <handler type="java:org.apache.axis.handlers.http.URLMapper" name="URLMapper"/>
+   <!-- 用来进行IP校验-->
+  <handler name="IPHandler" type="java:com.e9rj.platform.common.IpAuthentionHandler">
+         <parameter name="status" value="success" />
+  </handler>     
+  <service name="User.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.UserWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+  </service>  
+  <service name="App.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.AppWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>
+  
+  <service name="Portalinfo.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.PortalinfoWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>  
+  
+  <service name="Org.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.OrgWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>  
+  
+  <!-- 岗位管理服务 -->
+  <service name="Post.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.PostWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>
+  
+  <!-- 职员管理服务 -->
+  <service name="Employee.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.EmployeeWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>
+  
+  <!-- 职员角色 -->
+  <service name="Oprole.jws" provider="java:RPC">     
+     <parameter name="className" value="com.e9rj.sso.webservice.OproleWebService"/>  
+     <parameter name="scope" value="request"/>  
+     <parameter name="allowedMethods" value="*"/>  
+     <messageReceiver class="org.apache.axis2.receivers.RawXMLINOutMessageReceiver"/>  
+     <requestFlow>
+         <handler type="IPHandler" />
+     </requestFlow>
+  </service>
+   
+  <transport name="http">     
+     <requestFlow>     
+        <handler type="URLMapper"/>     
+     </requestFlow>     
+  </transport>     
+</deployment> 

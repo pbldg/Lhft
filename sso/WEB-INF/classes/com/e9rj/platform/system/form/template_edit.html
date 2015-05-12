@@ -1,0 +1,776 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html xmlns:v="urn:schemas-microsoft-com:vml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+	<script src="/e9common/js/json2.js" type="text/javascript"></script>
+<script type="text/javascript">
+var modelType = "";
+$(function(){
+
+	//按钮样式
+	$( "input:button, a, button", "div" ).button();
+	$("#TBLTYPE").change();
+	loadTemplate();
+	modelType = $("#ACTTYPE").val();
+	if(modelType=="B"){
+		//tab模板
+		var span = '<input type="text" id="FLDNAME" name="FLDNAME" style="width:200px;"/>';
+		$("#FLDNAMESPAN").html("").append(span);
+		//列表模板
+		$("input[name='selNameOrValue'][value='V']").attr("checked",false);
+		$("#infoTable tr[name='EDITTR1']").css("display","none");
+		$("#infoTable tr[name='EDITTR2']").css("display","none");
+		$("#infoTable tr[name='EDITTR3']").css("display","none");
+		$("#infoTable tr[name='EDITTR5']").css("display","none");
+		$("#infoTable tr[name='EDITTR6']").css("display","none");
+		$("#infoTable tr[name='EDITTR7']").css("display","none");
+		$("#LABELSPAN").html("tab名称：")
+		$("#FLDNAMETD").html("tab名称：");
+		$("#FLDCAPTIONTD").html("tab代码：");
+		$("#EDITTD_CSS").html("url：");
+	}
+	if(modelType=="L" || modelType=="LM" || modelType=="LT"){
+		//列表模板
+		$("input[name='selNameOrValue'][value='V']").attr("checked",false);
+		$("#infoTable tr[name='EDITTR1']").css("display","none");
+		$("#infoTable tr[name='EDITTR2']").css("display","none");
+		$("#infoTable tr[name='EDITTR3']").css("display","none");
+		$("#infoTable tr[name='EDITTR5']").css("display","none");
+		$("#infoTable tr[name='EDITTR6']").css("display","none");
+		$("#infoTable tr[name='EDITTR7']").css("display","none");
+		$("#EDITTD_CSS").html("其它：");
+	}
+});
+    var NODEWIDTH = 100;	//节点宽度
+    var NODEHEIGHT = 30;	//节点高度
+    var NODENUM = 50;		//节点数量，50*50
+    var TEXTLEFT = 20; //文本左偏移量
+    var TEXTTOP = 20;  //文件上偏移量
+    var selectedObjId = "";
+    var selectedObj;
+    var lastSelectedObjId = "";//上次选中的Id
+    var VAL_COLOR = "#A020F0";//值节点颜色
+    var NODE_COLOR = "blue";//标签节点颜色
+    //建立节点
+    //style 0:新增，1:已有，itemtype:N-Name,V-Value，attrStr-属性
+    var index=0;
+    function createFieldNode(){
+    	modelType = $("#ACTTYPE").val();
+    	//模板类型
+    	
+    	if(modelType=="E" || modelType=="S"){
+    		//编辑模板
+    		if(checkExist($("#FLDNAME").val())){
+        		$.uiconfirm("该节点已经存在，是否继续添加？","系统提示",function(){
+        			doCreateEdit();
+        		},function(){
+        			
+        		});
+        	}else{
+        		doCreateEdit();
+        	}
+    	}else if(modelType=="L" ||modelType=="LM" ||modelType=="LT"){
+    		//列表模板
+    		doCreateEdit();
+    	}else if(modelType="B"){
+    		//tab模板
+    		
+    		doCreateTab();
+    	}
+    	
+    }
+    //创建 tab模板
+    function doCreateTab(){
+    	var tableName = $("#TBLTYPE").val();
+    	var fieldCode = $("#FLDNAME").val();
+    	if(fieldCode==""){
+    		$.uialert("请输入tab名称!");
+    		return;
+    	}
+    		
+       	var obj = new Object();
+       	obj.tableName = tableName;
+       	obj.fieldName = fieldCode;
+       	obj.fieldCode = fieldCode;
+       	obj.itemType = "N";
+       	obj.x = 0;
+       	
+       	obj.y = 0;
+       	obj.width = NODEWIDTH;
+       	obj.height = NODEHEIGHT;
+       	obj.cssStyle = "";
+       	obj.allowManual = "";
+       	obj.ctlType = "";
+       	obj.sqlDataSource = "";
+       	obj.otherProperty = "";
+       	obj.isValidate = "";
+       	create(obj);
+    }
+    //创建编辑模板、列表模板
+    function doCreateEdit(){
+    	var tableName = $("#TBLTYPE").val();
+    	var fieldCode = $("#FLDNAME").val();
+    	var fieldName = getSelectedText("#FLDNAME");
+    	if(tableName==""){
+    		$.uialert("请选择表名!");
+    		return;
+    	}
+    	if(fieldCode==""){
+    		$.uialert("请选择字段名!");
+    		return;
+    	}
+    	var itemType = getCheckboxValue("selNameOrValue");
+    	if(itemType==""){
+    		$.uimessage("请选择要生成的节点类型");
+    		return;
+    	}
+    	var itemTypes = itemType.split(",");
+    	for(var i=0;i<itemTypes.length;i++){
+    		
+        	var obj = new Object();
+        	obj.tableName = tableName;
+        	obj.fieldName = fieldName;
+        	obj.fieldCode = fieldCode;
+        	obj.itemType = itemTypes[i];
+        	if(itemTypes[i]=="N"){
+        		obj.x = 0;
+        	}else{
+        		obj.x = NODEWIDTH;
+        	}
+        	
+        	obj.y = 0;
+        	obj.width = NODEWIDTH;
+        	obj.height = NODEHEIGHT;
+        	obj.cssStyle = "";
+        	obj.allowManual = "";
+        	obj.ctlType = "";
+        	obj.sqlDataSource = "";
+        	obj.otherProperty = "";
+        	obj.isValidate = "";
+        	create(obj);
+    	}
+    	
+    }
+    //判断是否已经存在
+    function checkExist(fieldCode){
+    	var obj = document.getElementById("svg").childNodes;
+    	if(obj!=null){
+    		for(i=0;i<obj.length;i++){
+    			if(obj[i].tagName=="rect" && obj[i].getAttribute("fieldCode")==fieldCode){
+    				return true;
+    			}		
+    		}
+    	}
+    	return false;
+    }
+    function create(obj){
+    	createRect(index,obj);
+        createText(index,obj);
+        index++;
+    }
+    //创建长方形
+    function createRect(idx,obj){
+    	var rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    	rect.setAttribute("id","rect"+idx);
+        rect.setAttribute("x",obj.x);
+        rect.setAttribute("y",obj.y);
+        rect.setAttribute("rx",5);
+        rect.setAttribute("ry",5);
+        rect.setAttribute("width",obj.width);
+        rect.setAttribute("height",obj.height);
+        if(obj.itemType=="N"){
+	        rect.setAttribute("fill",NODE_COLOR);
+	        rect.setAttribute("ctlType","label");
+	        rect.setAttribute("allowManual","0");
+	        rect.setAttribute("isValidate","0");
+        }else{
+	        rect.setAttribute("fill",VAL_COLOR);
+	        rect.setAttribute("ctlType","textbox");
+	        rect.setAttribute("allowManual","1");
+	        rect.setAttribute("isValidate","1");
+        }
+        
+        rect.setAttribute("stroke","black");
+        rect.setAttribute("style","cursor:move;");
+        rect.setAttribute("opacity","0.5");
+        //以下是特殊属性
+        rect.setAttribute("tableName",obj.tableName);
+        rect.setAttribute("fieldName",obj.fieldName);
+        rect.setAttribute("fieldCode",obj.fieldCode);
+        rect.setAttribute("itemType",obj.itemType);
+        rect.setAttribute("cssStyle",obj.cssStyle);
+        rect.setAttribute("sqlDataSource",obj.sqlDataSource);
+        rect.setAttribute("otherProperty",obj.otherProperty);
+        if(obj.allowManual!=""){
+        	rect.setAttribute("allowManual",obj.allowManual);
+        }
+        if(obj.isValidate!=""){
+        	rect.setAttribute("isValidate",obj.isValidate);
+        }
+        if(obj.ctlType!=""){
+        	rect.setAttribute("ctlType",obj.ctlType);
+        }
+        document.getElementById("svg").appendChild(rect);
+    }
+    function createText(idx,obj){
+    	var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute("id","rect"+idx+"Text")
+        text.textContent = obj.fieldName;
+        text.setAttribute("x",TEXTLEFT + parseInt(obj.x));
+        text.setAttribute("y",TEXTTOP + parseInt(obj.y));
+        text.style.setProperty("font-family","simsun");//字体为宋体
+        text.style.setProperty("font-size","15");
+        text.setAttribute("style","cursor:move");
+        document.getElementById("svg").appendChild(text);
+    }
+
+    //操作区域按键
+    function keyUp(){
+    	var svgWidth = document.getElementById("svg").getAttribute("width");
+		var svgHeight = document.getElementById("svg").getAttribute("height");
+    	event = getEvent();
+    	var code = event.keyCode;
+    	var sx=0;
+    	var sy=0;
+    	if(code==37){
+    		//左
+    		sx = -1;
+    	}else if(code==38){
+    		//上
+    		sy = -1;
+    	}else if(code==39){
+    		//右
+    		sx = 1;
+    	}else if(code==40){
+    		//下
+    		sy = 1;
+    	}else if(code==46){
+    		//删除
+    		delnode();
+    		return;
+    	}
+    	
+    	var obj;
+    	var i;
+
+    	obj = document.getElementById("svg").childNodes;
+    	if(obj!=null){
+    		for(i=0;i<obj.length;i++){
+    			if(((obj[i].tagName=="rect")||(obj[i].tagName=="text")) && selectedObjId == obj[i].getAttribute("id")){
+    				var rectObj = obj[i];
+    				var textObj = obj[i];
+    				//如果是text,取到相应的rect
+    				if(obj[i].tagName=="text"){
+    					var rectId = obj[i].getAttribute("id").substring(0,obj[i].getAttribute("id").indexOf("Text"));
+    					rectObj = document.getElementById(rectId);
+    					textObj = obj[i];
+    				}
+    				if(obj[i].tagName=="rect"){
+    					var textId = obj[i].getAttribute("id") + "Text";
+    					rectObj = obj[i];
+    					textObj = document.getElementById(textId);
+    				}
+    				if(event.ctrlKey&&code==39){
+    					rectObj.setAttribute("width",parseInt(rectObj.getAttribute("width")) + NODEWIDTH);
+    				}else if(event.ctrlKey&&code==37){
+    					if(rectObj.getAttribute("width")>NODEWIDTH){
+    						rectObj.setAttribute("width",parseInt(rectObj.getAttribute("width")) - NODEWIDTH);
+    					}
+    				}else if(event.ctrlKey&&code==40){
+    					rectObj.setAttribute("height",parseInt(rectObj.getAttribute("height")) + NODEHEIGHT);
+    				}else if(event.ctrlKey&&code==38){
+    					if(rectObj.getAttribute("height")>NODEHEIGHT){
+    						rectObj.setAttribute("height",parseInt(rectObj.getAttribute("height")) - NODEHEIGHT);
+    					}
+    				}else if(!event.ctrlKey&&code==37){
+    					//左移
+    					if(parseInt(rectObj.getAttribute("x"))==0){
+    						return;
+    					}
+    					rectObj.setAttribute("x",parseInt(rectObj.getAttribute("x")) - NODEWIDTH);
+    					textObj.setAttribute("x",parseInt(textObj.getAttribute("x")) - NODEWIDTH);
+    				}else if(!event.ctrlKey&&code==38){
+    					//上移
+    					if(parseInt(rectObj.getAttribute("y"))==0){
+    						return;
+    					}
+    					rectObj.setAttribute("y",parseInt(rectObj.getAttribute("y")) - NODEHEIGHT);
+    					textObj.setAttribute("y",parseInt(textObj.getAttribute("y")) - NODEHEIGHT);
+    				}else if(!event.ctrlKey&&code==39){
+    					//右移
+    					if((parseInt(rectObj.getAttribute("x")) + NODEWIDTH)==svgWidth){
+    						return;
+    					}
+    					rectObj.setAttribute("x",parseInt(rectObj.getAttribute("x")) + NODEWIDTH);
+    					textObj.setAttribute("x",parseInt(textObj.getAttribute("x")) + NODEWIDTH);
+    				}else if(!event.ctrlKey&&code==40){
+    					//下移
+    					if((parseInt(rectObj.getAttribute("y")) + NODEHEIGHT)==svgHeight){
+    						return;
+    					}
+    					rectObj.setAttribute("y",parseInt(rectObj.getAttribute("y")) + NODEHEIGHT);
+    					textObj.setAttribute("y",parseInt(textObj.getAttribute("y")) + NODEHEIGHT);
+    				}
+    			}
+    		}
+    	}
+    	
+    }
+    //删除节点
+    function delnode(){
+    	var obj,objid;
+    	obj = document.getElementById("svg").childNodes;
+    	if(obj!=null){
+    		for(i=0;i<obj.length;i++){
+    			if(((obj[i].tagName=="rect")||(obj[i].tagName=="text")) && obj[i].getAttribute("id") == selectedObjId){
+    				if(obj[i].tagName=="text"){
+    					var rectId = obj[i].getAttribute("id").substring(0,obj[i].getAttribute("id").indexOf("Text"));
+    					var rectObj = document.getElementById(rectId);
+    					document.getElementById("svg").removeChild(obj[i]);
+    					document.getElementById("svg").removeChild(rectObj);
+    					selectedObjId="";
+    					lastSelectedObjId="";
+    				}else if(obj[i].tagName=="rect"){
+    					var textId = obj[i].getAttribute("id")+"Text";
+    					var textObj = document.getElementById(textId);
+    					document.getElementById("svg").removeChild(obj[i]);
+    					document.getElementById("svg").removeChild(textObj);
+    					selectedObjId="";
+    					lastSelectedObjId="";
+    				}
+    			}
+    		}
+    	}
+    	
+    }
+    //移动
+    var candrag = false;
+    var moveobj = null;
+    var x=y=0;
+
+    function mouseDown(ev){
+    	//if(event.button!=1) return;
+    	ev = getEvent();
+    	var mousePos = mousePosition(ev);
+
+    	var obj = event.srcElement ? event.srcElement : event.target;
+    	if(obj==null) return(false);
+    	
+    	if(obj.tagName=="rect"||obj.tagName=="text"){
+    		moveobj = obj;
+    		candrag = true;
+    		//obj.fillcolor="red";
+
+    		x = mousePos.x - moveobj.getAttribute("x");
+    		y = mousePos.y - moveobj.getAttribute("y") - designertable.offsetTop;
+    		
+    		selectedObjId = obj.getAttribute("id");
+    	}
+    }
+
+    function mouseUp(){
+    	candrag = false;
+    	if(moveobj==null) return(false);
+    	
+    	moveobj = null;
+    }
+
+    function mouseMove(ev){
+    	ev = getEvent();
+    	event = getEvent();
+    	var mousePos = mousePosition(ev);
+    	window.status = event.clientX+":"+(event.clientY - designertable.offsetTop);
+    	if(moveobj!=null&&candrag==true){
+    		var svgWidth = document.getElementById("svg").getAttribute("width");
+    		var svgHeight = document.getElementById("svg").getAttribute("height");
+    		//moveobj.style.left = mousePos.x - x;
+    		//moveobj.style.top = mousePos.y - designertable.offsetTop - y;
+    		//如果拖动的是text,则rect也要跟着一起拖动
+    		var moveObjId = moveobj.getAttribute("id");
+    		if(moveObjId.indexOf("Text")>0){
+    			//找到相应的rect
+    			var rectId = moveobj.getAttribute("id").substring(0,moveObjId.indexOf("Text"));
+    			var rectObj = document.getElementById(rectId);
+    			
+    			moveobj.setAttribute("x",mousePos.x - x);
+    			moveobj.setAttribute("y",mousePos.y - designertable.offsetTop - y);
+    			if(Math.round(moveobj.getAttribute("y")/NODEHEIGHT)*NODEHEIGHT+TEXTTOP<0){
+    				moveobj.setAttribute("y",TEXTTOP);
+    				rectObj.setAttribute("y",0);
+    				
+    			}else{
+    				var my = (Math.round(moveobj.getAttribute("y")/NODEHEIGHT)*NODEHEIGHT);
+    				moveobj.setAttribute("y",my+TEXTTOP);
+    				rectObj.setAttribute("y",my);
+    				if(rectObj.getAttribute("y")>=svgHeight){
+    					moveobj.setAttribute("y",my+TEXTTOP-NODEHEIGHT);
+    					rectObj.setAttribute("y",my-NODEHEIGHT);
+    				}
+    			}
+    			if(Math.round(moveobj.getAttribute("x")/NODEWIDTH)*NODEWIDTH+TEXTLEFT<0){
+    				moveobj.setAttribute("x",TEXTLEFT);
+    				rectObj.setAttribute("x",0);
+    			}else{
+    				var mx = (Math.round(moveobj.getAttribute("x")/NODEWIDTH)*NODEWIDTH);
+    				moveobj.setAttribute("x",mx+TEXTLEFT);
+    				rectObj.setAttribute("x",mx);
+    				if(rectObj.getAttribute("x")>=svgWidth){
+    					moveobj.setAttribute("x",mx+TEXTLEFT-NODEWIDTH);
+    					rectObj.setAttribute("x",mx-NODEWIDTH);
+    				}
+    			}
+    		}
+    		//如果拖动的是rect,则text也要跟着一起拖动
+    		if(moveObjId.indexOf("rect")>-1 && moveObjId.indexOf("Text")<0){
+    			//找到相应的test
+    			var textId = moveObjId+"Text";
+    			//文本对象
+    			var textObj = document.getElementById(textId);
+    			moveobj.setAttribute("x",mousePos.x - x);
+    			moveobj.setAttribute("y",mousePos.y - designertable.offsetTop - y);
+    			if(Math.round(moveobj.getAttribute("y")/NODEHEIGHT)*NODEHEIGHT<0){
+    				moveobj.setAttribute("y",0);
+    				textObj.setAttribute("y",TEXTTOP);
+    				
+    			}else if(Math.round(moveobj.getAttribute("y")/NODEHEIGHT)*NODEHEIGHT>=(svgHeight-NODEHEIGHT)){
+    				moveobj.setAttribute("y",svgHeight);
+    				textObj.setAttribute("y",svgHeight+TEXTTOP);
+    			}else{
+    				var my = Math.round(moveobj.getAttribute("y")/NODEHEIGHT)*NODEHEIGHT;
+    				moveobj.setAttribute("y",my);
+    				textObj.setAttribute("y",my+TEXTTOP);
+    			}
+    			if(Math.round(moveobj.getAttribute("x")/NODEWIDTH)*NODEWIDTH<0){
+    				moveobj.setAttribute("x",0);
+    				textObj.setAttribute("x",TEXTLEFT);
+    			}else{
+    				var mx = Math.round(moveobj.getAttribute("x")/NODEWIDTH)*NODEWIDTH;
+    				moveobj.setAttribute("x",mx);
+    				textObj.setAttribute("x",mx+TEXTLEFT);
+    				if(moveobj.getAttribute("x")>=svgWidth){
+    					moveobj.setAttribute("x",mx-NODEWIDTH);
+    					textObj.setAttribute("x",mx+TEXTLEFT-NODEWIDTH);
+    				}
+    			}
+    		}
+    	}
+    }
+    //取事件
+    function getEvent(){     //同时兼容ie和ff的写法
+        if(document.all)    return window.event;       
+        func=getEvent.caller;           
+        while(func!=null){   
+            var arg0=func.arguments[0];
+            if(arg0){
+                if((arg0.constructor==Event || arg0.constructor ==MouseEvent)
+                    || (typeof(arg0)=="object" && arg0.preventDefault && arg0.stopPropagation)){   
+                    return arg0;
+                }
+            }
+            func=func.caller;
+        }
+        return null;
+    }
+    function mousePosition(ev){
+    	ev = getEvent();
+    	if(ev.pageX || ev.pageY){
+    		return {x:ev.pageX, y:ev.pageY};
+    	}
+    	
+    	return {
+    		x:ev.clientX + document.body.scrollLeft - document.body.clientLeft,
+    		y:ev.clientY + document.body.scrollTop  - document.body.clientTop 
+    		};
+    }
+    function designClick(){
+    	//点击某个状态或动作后执行
+    	ev = getEvent();
+    	event = getEvent();
+    	var obj = event.srcElement ? event.srcElement : event.target;
+    	if(obj==null) return(false);
+    	if(obj.tagName=="rect"||obj.tagName=="text"){	
+			if(lastSelectedObjId!=""){
+				var lastSelectedObj = document.getElementById(lastSelectedObjId);
+	    		if(lastSelectedObj.getAttribute("itemType")=="N"){
+	    			lastSelectedObj.setAttribute("fill",NODE_COLOR);
+	    		}else if(lastSelectedObj.getAttribute("itemType")=="V"){
+	    			lastSelectedObj.setAttribute("fill",VAL_COLOR);
+	    		}
+			}
+    		
+    		selectedObj = obj;
+    		if(obj.tagName=="text"){
+    			selectedObj = getRectFromText(obj);
+    		}
+    		selectedObj.setAttribute("fill","red");
+    		$("#fldName").val(selectedObj.getAttribute("fieldCode"));
+    		$("#fldCaption").val(selectedObj.getAttribute("fieldName"));
+    		setRadioValue('itemType',selectedObj.getAttribute("itemType"));
+    		$("#ctlType").val(selectedObj.getAttribute("ctlType"));
+    		setRadioValue('allowManual',selectedObj.getAttribute("allowManual"));
+    		setRadioValue('isValidate',selectedObj.getAttribute("isValidate"));
+    		$("#cssStyle").val(selectedObj.getAttribute("cssStyle"));
+    		lastSelectedObjId = selectedObj.getAttribute("id");
+    		$("#sqlDataSource").val(selectedObj.getAttribute("sqlDataSource"));
+    		$("#otherProperty").val(selectedObj.getAttribute("otherProperty"));
+    	}else{
+    		//setfillcolor();
+    	}
+    }
+    //根据Text取得相应的rect的ID
+    function getRectFromText(obj){
+    	var rectId = obj.getAttribute("id").substring(0,obj.getAttribute("id").indexOf("Text"));
+    	return document.getElementById(rectId);
+    }
+    
+    //根据表名取相应元数据配置(表下拉框ID，元数据下拉框ID)
+    function getMetadata(tableSelectId,fieldSelectId){
+    	var tableName = $("#"+tableSelectId).find("option:selected").val();
+    	if(tableName!=""){
+        	changeChildSelect(fieldSelectId,'HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=form.metadata!queryMetadataByTable&TABLE_NAME='+tableName,"");
+    	}
+    }
+    //设置相关属性
+    function setField(){
+    	selectedObj.setAttribute("fieldName",$("#fldCaption").val());
+    	selectedObj.setAttribute("fieldCode",$("#fldName").val());
+    	selectedObj.setAttribute("itemType",getRadioValue("itemType"));
+    	selectedObj.setAttribute("ctlType",$("#ctlType").val());
+    	selectedObj.setAttribute("allowManual",getRadioValue("allowManual"));
+    	selectedObj.setAttribute("isValidate",getRadioValue("isValidate"));
+    	selectedObj.setAttribute("cssStyle",$("#cssStyle").val());
+    	selectedObj.setAttribute("sqlDataSource",$("#sqlDataSource").val());
+    	selectedObj.setAttribute("otherProperty",$("#otherProperty").val());
+    }
+    //保存
+	function saveInfo(){
+		var obj = document.getElementById("svg").childNodes;
+		var objs = new Array();
+		var len = 0;
+		if(obj!=null){
+    		for(i=0;i<obj.length;i++){
+    			if(obj[i].tagName=="rect"){
+    				var o = new Object();
+    				o.FLDNAME = obj[i].getAttribute("fieldCode");
+    				o.FLDCAPTION = obj[i].getAttribute("fieldName");
+    				o.ITEMTYPE = obj[i].getAttribute("itemType");
+    				o.ROWIDX = parseInt(obj[i].getAttribute("y"))/NODEHEIGHT;
+    				o.ROWSPAN = parseInt(obj[i].getAttribute("height"))/NODEHEIGHT;
+    				o.COLIDX = parseInt(obj[i].getAttribute("x"))/NODEWIDTH;
+    				o.COLSPAN = parseInt(obj[i].getAttribute("width"))/NODEWIDTH;
+    				o.CTLTYPE = obj[i].getAttribute("ctlType");
+    				o.ALLOWMANUAL = obj[i].getAttribute("allowManual");
+    				o.ISVALIDATE = obj[i].getAttribute("isValidate");
+    				o.CSSSTYLE = obj[i].getAttribute("cssStyle");
+    				o.SQLDATASOURCE = obj[i].getAttribute("sqlDataSource");
+    				o.OTHERPROPERTY = obj[i].getAttribute("otherProperty");
+    				objs[len++]=o;
+    			}
+    		}
+		}
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=form.model!saveTemplate";
+		var itemData = JSON.stringify(objs);
+		itemData = itemData.replaceAll("&","|and|");
+		$.hkajax(url,"TPLID="+$("#TPLID").val()+"&TPLNAME="+$("#TPLNAME").val()+"&ACTTYPE="+$("#ACTTYPE").val()+"&TBLTYPE="+$("#TBLTYPE").val()+"&ITEM_DATA="+itemData,{
+			success:function(data){
+				$.uimessage(data.result);
+				if(data.result.indexOf("成功")>0){
+            		if($("#closeChecked").attr("id") && !$("#closeChecked").attr("checked")){
+            			
+            		}else{
+            			cancel();
+            		}
+            	}
+			}
+		});
+    }
+    function loadTemplate(){
+    	var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=form.model!loadTemplate&TPLID="+$("#TPLID").val();
+    	$.hkajax(url,"",{
+    		success:function(data){
+    			var datas = data.Rows;
+				$.each(datas,function(i,item){
+					var obj = new Object();
+			    	obj.tableName = item.tableName;
+			    	obj.fieldName = item.FLDCAPTION;
+			    	obj.fieldCode = item.FLDNAME;
+			    	obj.itemType = item.ITEMTYPE;
+			    	obj.x = parseInt(item.COLIDX) * NODEWIDTH;
+			    	obj.y = parseInt(item.ROWIDX) * NODEHEIGHT;
+			    	obj.height = parseInt(item.ROWSPAN) * NODEHEIGHT;
+			    	obj.width = parseInt(item.COLSPAN) * NODEWIDTH;
+			    	obj.cssStyle = item.CSSSTYLE.replaceAll("\\|and\\|","&");
+			    	obj.allowManual = item.ALLOWMANUAL;
+			    	obj.ctlType = item.CTLTYPE;
+			    	obj.sqlDataSource = item.SQLDATASOURCE.replaceAll("’","'");
+			    	obj.otherProperty = item.OTHERPROPERTY;
+			    	obj.isValidate = item.ISVALIDATE;
+			    	create(obj);
+				});
+    		}
+    	});
+    }
+    function switchInput(){
+    	//if($("#manual").attr("checked")){
+    		$("#FLDNAME_BACKUP").css("display","");
+    		$("#FLDNAME_BACKUP").attr("name","FLDNAME_1");
+    		$("#FLDNAME_BACKUP").attr("id","FLDNAME_1");
+    		
+    		$("#FLDNAME").css("display","none");
+    		$("#FLDNAME").attr("name","FLDNAME_BACKUP");
+    		$("#FLDNAME").attr("id","FLDNAME_BACKUP");
+    		
+    		
+    		$("#FLDNAME_1").attr("name","FLDNAME");
+    		$("#FLDNAME_1").attr("id","FLDNAME");
+    	//}else{
+    		
+    	//}
+    }
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD"/>
+		<div id="editContentDiv" style="overflow-y:auto;">
+			<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable2" class="full" >
+				<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+				</tr>
+				<!-- ***end*** -->										
+				<tr>						
+	                <td align="right" >表名：</td>
+	                <td align="left" >
+	                	<select id="TBLTYPE" name="TBLTYPE" onchange="getMetadata('TBLTYPE','FLDNAME')" disabled="disabled"></select>
+	                	<input type="text" style="display: none;" id="TPLID" name="TPLID"/>
+	                	<input type="text" style="display: none;" id="ACTTYPE" name="ACTTYPE"/>
+	                	<input type="text" style="display: none;" id="TPLNAME" name="TPLNAME"/>
+	                </td>
+	                <td align="right" ><span id="LABELSPAN">字段名：</span></td>
+	                <td align="left" >
+	                	<span id="FLDNAMESPAN">
+	                	<select id="FLDNAME" name="FLDNAME" style="width:200px;"></select>
+	                	<input id="FLDNAME_BACKUP" name="FLDNAME_BACKUP" style="display:none;width:200px;">
+	                	<input type="checkbox" name="selNameOrValue" value="N" checked>标题
+						<input type="checkbox" name="selNameOrValue" value="V" checked>值
+						<input type="checkbox" name="manual" id="manual" value="1" onclick="switchInput()">手动输入
+						</span>
+						<button id="addBtn" type="button" onclick="createFieldNode();"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+						<div style="display:none">
+							<a class="button" href="#" onclick="autoAdjustNode();return(false);"><img src="images/icon/png/16x16/refresh.png" alt=""/>自动编排</a>
+						</div>
+	                </td>	
+				</tr>	
+				<tr>
+					<td colspan="4">
+					<table border="1" width="100%" id="designertable" cellspacing='1'>
+						<tr>
+							<td id="designertd" nowrap="nowrap" tabindex="11111" onkeyup="keyUp();"  >
+								<div style="overflow:auto;width: 660px;">
+									<svg id="svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+										xml:space="preserve"
+							            width="1000" height="450" 
+							            style="border:solid;-webkit-user-select:none;"
+							            onclick="designClick();" 
+							            onselectstart="return false;"
+										onmousemove="mouseMove();"
+										onmousedown="mouseDown();"
+										onmouseup="mouseUp();"
+										title="请选中一项进行操作!" tabindex="1111">
+									</svg>
+								</div>
+							</td>
+							<td valign="top">
+								<p align="center" style="font-size:14px;"><br>属性编辑</p>
+								<table width="100%" border="0" id="infoTable">
+									<tr>
+										<td align="right" id="FLDNAMETD">字段名：</td>
+										<td>
+											<input id="fldName" name="fldName" style="width:200px;" onchange="setField();"/>
+										</td>
+									</tr>
+									<tr>
+										<td align="right" id="FLDCAPTIONTD">字段名称：</td>
+										<td>
+											<input id="fldCaption" name="fldCaption" style="width:200px;" onchange="setField();"/>
+										</td>
+									</tr>
+									<tr name="EDITTR1">
+										<td align="right">字段属性：</td>
+										<td>
+											<input type="radio" name="itemType" value="N" checked onclick="setField();">标题
+											<input type="radio" name="itemType" value="V" onclick="setField();">值
+										</td>
+									</tr>
+									<tr name="EDITTR2">
+										<td align="right">控件类型：</td>
+										<td>
+											<select id="ctlType" name="ctlType" style="width:200px;" onchange="setField();"></select>
+										</td>
+									</tr>
+									<tr name="EDITTR3">
+										<td align="right">是否允许输入：</td>
+										<td>
+											<input type="radio" name="allowManual" value="1" checked onclick="setField();">是
+											<input type="radio" name="allowManual" value="0" onclick="setField();">否
+										</td>
+									</tr>
+									<tr name="EDITTR4">
+										<td align="right" id="EDITTD_CSS">css样式：</td>
+										<td><input id="cssStyle" name="cssStyle" style="width:200px;" onchange="setField();"/></td>
+									</tr>
+									<tr name="EDITTR5">
+										<td align="right" id="EDITTD_SQL">SQL数据源：</td>
+										<td><input id="sqlDataSource" name="sqlDataSource" style="width:200px;" onchange="setField();"/></td>
+									</tr>
+									<tr name="EDITTR6">
+										<td align="right" id="EDITTD_OTHER">其它属性：</td>
+										<td><input id="otherProperty" name="otherProperty" style="width:200px;" onchange="setField();"/></td>
+									</tr>
+									<tr name="EDITTR7">
+										<td align="right" id="EDITTD_VALIDATE">是否验证：</td>
+										<td>
+											<input type="radio" name="isValidate" value="1" checked onclick="setField();">是
+											<input type="radio" name="isValidate" value="0" onclick="setField();">否
+										</td>
+									</tr>
+									<tr height="50">
+										<td colspan="4" align="center" style="display:none;">
+											<a class="button" href="#" onclick="setField();return(false);" style="float:none;"><img src="images/icon/png/16x16/add.png" alt=""/>设置</a>
+										</td>
+									</tr>
+									
+								</table>
+							</td>
+						</tr>												
+	        		</table>
+	        	</td>
+	        </tr>
+	        </table>
+        </div>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<span style="position:absolute;bottom:5px;left:15px;vertical-align: middle;">
+		<input type="checkbox" checked="checked" id="closeChecked">保存后关闭
+	</span>
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="saveBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+		
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="TB_TPL_BEAN.getCmd()"/>
+	<var name="TPLID" value="TB_TPL_BEAN.get('TPLID')"/><!-- 模板ID -->
+	<var name="ACTTYPE" value="TB_TPL_BEAN.get('ACTTYPE')"/><!-- 模板类型 -->
+	<var name="TPLNAME" value="TB_TPL_BEAN.get('TPLNAME')" validate="maxSize[20]"/><!-- -->
+	<var name="TBLTYPE" value="TB_TPL_BEAN.get('TBLTYPE')" codesrcsql="SELECT TABLECODE, TABLE_INFO FROM V_METATABLE" emptyoption="true" validate="maxSize[20]"/><!-- -->
+	<var name="ctlType" cachedata="SYSCODE,INPUT_TYPE" emptyoption="true"/><!-- -->
+<!--Form Setting End-->

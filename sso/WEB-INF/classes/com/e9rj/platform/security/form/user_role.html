@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.role";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.role";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.role";
+    
+	$(document).ready(function () {
+		//$('body').layout();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"none",
+				{
+					colModel: [  
+							{name:"ROLEID",index:"ROLEID",label:"角色ID",hidden:true},
+							{name:"ROLENAME",index:"ROLENAME",label:"角色名"},
+							{name:"REMARK",index:"REMARK",label:"备注"}
+			        	  ],
+			    	onSelectRow:function(rowid){
+			    		selectRole(rowid);
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		
+			    		resizeGrid('gridTable','queryDiv','contentDiv');
+			    		
+			    		$("#gridTable .cbox").each(function(i,item){
+			    			var rowData = $("#gridTable").jqGrid("getRowData", i+1);  
+			    			$('#selectRole option').each(function(){
+				    			if($(this).val() == rowData.ROLEID){
+				    				$(item).attr("checked",true);
+				    				jQuery('#gridTable').jqGrid('setSelection',i+1);
+				    			}
+				    		}); 
+		    			});
+			    		//全选按钮处理
+			    		
+			    		$(".ui-jqgrid-htable .cbox").click(function (){
+			    			$("#gridTable .cbox").each(function(i,item){
+			    				selectRole(i+1);
+			    			});
+			    		});
+			    	}
+				});
+		//resize绑定
+		$(window).bind('resize', function(){
+			resizeGrid('gridTable','queryDiv','contentDiv');
+		});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		$( "#buttonset" ).buttonset();
+		//end****************************************
+		
+	});
+	function selectRole(rowid){
+		//选中
+		if($($("#gridTable .cbox").get(rowid-1)).attr("checked")=="checked"){
+			var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+			var hasFlag = false;
+			//判断是否已经存在于select中
+			$('#selectRole option').each(function(){
+    			if($(this).val() == rowData.ROLEID){
+    				hasFlag = true;
+    			}
+    		}); 
+			//添加到select列表中
+			if(!hasFlag){
+				$("#selectRole").append("<option value='"+rowData.ROLEID+"'>"+rowData.ROLENAME+"</option>"); 
+			}
+		}else{
+			//去掉
+			var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+			var hasFlag = false;
+			//判断是否已经存在于select中
+			$('#selectRole option').each(function(){
+    			if($(this).val() == rowData.ROLEID){
+    				$("#selectRole option[value='"+rowData.ROLEID+"']").remove(); 
+    			}
+    		}); 
+		}
+	}
+	//保存
+	function saveInfo(){
+		/*
+		if($('#selectRole option').size()==0){
+			$.uialert("请选择用户数据!");
+			return;
+		}
+		*/
+		
+		var ids = "";
+		
+		$('#selectRole option').each(function(){
+			ids = ids + $(this).val() + ",";
+		}); 
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.user!saveUserRole"
+		$.hkajax(
+				url,
+				"OPNO=#{USER_BEAN.get('OPNO')}&ROLEID="+ids,
+				{
+					success:function(data){
+						var result = data.result;
+						
+						if(result.indexOf("成功")>0){
+							$.uimessage(result);
+	                		cancel();
+	                	}else{
+	                		$.uialert(result);
+	                	}
+					}
+				});
+	}
+    </script>
+</head>
+<body>
+    <div class="ui-layout-center">
+	    <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+					角色名：
+					<input type="text" id="ROLENAME" name="ROLENAME">
+					<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+				</form>
+				</div>
+				</fieldset>
+		</div>
+		<script type="text/javascript">
+				createSelectCondition();
+			</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="role">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+	        <div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+	        </div>
+		</div>
+    </div>
+    <select id="selectRole" name="selectRole" multiple="multiple" style="display:none;"></select>
+    <!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>确定</button>
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="selectRole" codesrcsql="select ROLEID,(SELECT ROLENAME FROM SSO.TS_ROLE WHERE ROLEID=R.ROLEID) ROLENAME from SSO.TS_OPROLE R WHERE R.OPNO='#{USER_BEAN.get('OPNO')}'" codevisible="false"/><!-- 备注 -->
+<!--Form Setting End-->

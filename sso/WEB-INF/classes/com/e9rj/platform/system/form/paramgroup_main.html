@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.paramgroup";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.paramgroup";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.paramgroup";
+    
+	$(document).ready(function () {
+		//过滤按钮权限
+		//var auth = "#{RESOURCE_AUTH}";
+		//author(auth);
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel: 
+						  #{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+								 tabLogo, 
+								'[{name:"GROUPID",index:"GROUPID",label:"分组ID"},'+
+								'{name:"GROUPNAME",index:"GROUPNAME",label:"分组名称"},'+
+								'{name:"ORDIDX",index:"ORDIDX",label:"排序索引",formatter:"integer"}'+
+								']'
+								)},
+			    	onSelectRow:function(rowid){},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable",rowid);
+			    		$("#readBtn").click();
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv','contentDiv');
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    	},
+			    	onSortCol:function(index,iCol,sortorder){
+			    		//排序
+			    	},
+			    	//注意：以下为子表内容，没有子表时不需要以下代码
+			    	subGrid : true, 
+			    	subGridRowExpanded: function(subgrid_id, row_id) {
+			    		var subgrid_table_id, pager_id; 
+			    		subgrid_table_id = subgrid_id+"_t"; 
+			    		pager_id = "p_"+subgrid_table_id; 
+			    		var rowData = $("#gridTable").jqGrid("getRowData", row_id);  
+			    		$("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table><div id='"+pager_id+"' class='scroll'></div>");
+			    		
+			    		$.grid(
+			    				subgrid_table_id,
+			    				"HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.param&GROUPID="+rowData.GROUPID,
+			    				"",
+			    				"none",
+			    				{
+			    					multiselect: false,
+			    					colModel: [  
+			    								{name:"CNO",index:"CNO",label:"参数号",width:100},
+			    								{name:"CNAME",index:"CNAME",label:"参数名",width:100},    
+			    								{name:"CVALUE",index:"CVALUE",label:"参数值",width:100},
+			    								{name:"ORDIDX",index:"ORDIDX",label:"排序索引",width:100,align:"right"},    
+			    								{name:"REMARK",index:"REMARK",label:"参数说明",width:100}
+			    				        	  ],
+			    			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    			    		//冒泡
+			    			    		e.stopPropagation();
+			    			    	},
+			    			    	gridComplete: function () {
+			    			    		//屏闭右键
+			    			    		$("#"+subgrid_id).bind("contextmenu",function(e){
+			    			    	        return false;
+			    			    	    });
+			    			    	}
+			    				});
+			    		}
+			    		//子表内容结束**************
+				});
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		//end****************************************
+		//查询按钮
+		$("#searchBtn").click(function(){
+			
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+    		
+		});
+		
+		//新增按钮
+		$("#addBtn").click(function(){
+			var url = gotoAction + "&TMP="+new Date();
+			popSaveInfo(url,"新增参数分组信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//修改按钮
+		$("#updateBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+	        var url = gotoAction + "&GROUPID="+rowData.GROUPID+"&TMP="+new Date();
+	        popSaveInfo(url,"修改参数分组信息",globalPopWidth,globalPopHeightTinny);
+	        
+		});
+		
+		//查看按钮
+		$("#readBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+			var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+			var url = gotoAction + "&GROUPID="+rowData.GROUPID+"&TMP="+new Date();
+			popReadInfo(url,"查看参数分组信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//删除按钮
+		$("#delBtn").click(function(e){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(selectedId==""){
+				$.uimessage("请选择数据!");
+				return;
+			}
+			deleteInfo(e,selectedId);
+		});
+		
+		//删除操作
+		function deleteInfo(e,rowid){
+			var rows = rowid.split(",");
+			var ids = "";
+			jQuery.each(rows, function() {
+				var rowData = $("#gridTable").jqGrid("getRowData", this);  
+				ids = ids + rowData.GROUPID + ",";
+			});
+			
+			$.uiconfirm("该操作将会删除该参数组内的所有参数，确定要删除吗？", "确认提示",
+		      function() {
+				var url = delAction + "&GROUPID="+ids;
+				commonDelete(url);
+		      },
+		      function() {
+		        //取消删除
+		      });
+		}
+		$( "#buttonset" ).buttonset();
+		
+	});
+
+    </script>
+</head>
+<body>
+    <div class="ui-layout-center">
+	    <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+				<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+					分组名称：
+					<input type="text" id="GROUPNAME" name="GROUPNAME">
+					<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+					</form>
+				</div>
+			</fieldset>
+		</div>
+		<script type="text/javascript">
+			createSelectCondition();
+		</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px;"></div>
+	        <div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+				<span id="buttonset">
+					<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+					<button id="updateBtn" rightval="4"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>修改</button>
+					<button id="readBtn" rightval="1"><span class="ui-icon ui-icon-newwin" style="float: left;"></span>查看</button>
+					<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+				</span>
+	        </div> 
+		</div>
+    </div>
+</body>
+</html>

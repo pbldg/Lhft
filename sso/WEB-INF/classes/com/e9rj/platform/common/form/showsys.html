@@ -1,0 +1,367 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	
+    <customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <LINK href="/e9common/css/other.css" rel="stylesheet" type="text/css">
+    <LINK href="/e9common/css/tabs.css" rel="stylesheet" type="text/css">
+    
+	<script type="text/javascript">
+		function initPram(pm){
+			var msg = "确认重新初始化？";
+			if(pm=="all"){
+				msg = "重新初始化所有参数后需要刷新页面，" + msg;
+			}
+			$.uiconfirm(msg, "确认提示",
+				 function() {
+					var url="HttpChannel?action=INITMEMORYPARM&PM="+pm+"&date="+new Date();
+					$.get(url,"",function(data){
+						alert("重新加载成功!");
+						var appprotocol = window.location.protocol;
+						var apphostname = window.location.hostname;
+						var appport = window.location.port; 
+						var callbackurl=appprotocol+'//'+apphostname +':'+appport ;
+						var pathName = window.document.location.pathname;  
+						var projectName = pathName.substring(0, pathName.substr(1).indexOf('/') + 1);  
+						callbackurl = callbackurl + projectName;
+						window.top.location.href = callbackurl;
+					});	
+				    },
+				 function() {
+				   //取消
+			});
+		}
+		
+		$(window).bind('resize', function(){
+			var h = getOpenerFrameHeight(document) - calDivsHeight("titlebar,tabs");
+			$(".tab_container").height(h-38);
+			$(".tab_content").height(h-48);
+		});
+
+		$(document).ready(function() {
+			//显示TAB
+			$(".tab_content").hide();
+			$("ul.tabs li:first").addClass("active").show();
+			$(".tab_content:first").show();
+
+			$("ul.tabs li").click(function() {
+
+				$("ul.tabs li").removeClass("active");
+				$(this).addClass("active");
+				$(".tab_content").hide();
+
+				var activeTab = $(this).find("a").attr("href");
+				$(activeTab).fadeIn();
+				return false;
+			});
+
+			$(window).trigger("resize");
+		});
+	</script>
+</head>
+
+<body leftmargin="0" marginheight="0" marginwidth="0"
+	style="overflow: auto;" topmargin="0">
+	<div class="pagemain">
+		<div id="titlebar">
+			<span>系统运行情况监控</span>
+		</div>
+		
+		<ul class="tabs">
+			<LI>
+				<A href="#tab1">
+				<SPAN><img src="/e9common/images/icon/png/24x24/chart.png" height="20" style="vertical-align:middle;" border="0"/>系统在线状态</SPAN> </A>
+			</LI>
+			<LI>
+				<A href="#tab2">
+				<SPAN><img src="/e9common/images/icon/png/24x24/refresh.png" height="20" style="vertical-align:middle;" border="0"/>系统参数重新初始化</SPAN>
+				</A>
+			</LI>
+			<LI>
+				<A href="#tab3">
+				<SPAN><img src="/e9common/images/icon/png/24x24/info.png" height="20" style="vertical-align:middle;" border="0"/>系统信息</SPAN> </A>
+			</LI>
+		</UL>
+
+		<div class="tab_container">
+		<div id="tab1" class="tab_content">
+			<table align="center" border="0" width='100%'>
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						启动时间：
+					</td>
+					<td>
+						#{appStartDate}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						已运行时间：
+					</td>
+					<td>
+						#{postDate}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						基础框架版本：
+					</td>
+					<td>
+						#{FrameworkVersion}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						系统Context路径：
+					</td>
+					<td>
+						#{Context_path}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						表单文件是否使用Cache：
+					</td>
+					<td>
+						#{LoadFileCache}
+						<span style="display:'#{online==1 ? '':'none'}'"> <a
+							href="HttpChannel?action=SHOW_SYS_INFO&formusecache=true&online=true">设置为true</a>、<a
+							href="HttpChannel?action=SHOW_SYS_INFO&formusecache=false&online=true">设置为false</a>
+						</span>
+					</td>
+				</tr>
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						Action平均执行时间：
+					</td>
+					<td>
+						#{PerExecuteTime}ms(#{TotalExecuteNumber})
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						Action最长执行时间：
+					</td>
+					<td>
+						#{MaxExecuteTime}ms
+						&nbsp;&nbsp;将多少执行时间以上的action输出到日志(#{LogExecuteTime}ms)：
+						<a
+							href="HttpChannel?action=SHOW_SYS_INFO&logexecutetime=2&online=true">2s</a>、
+						<a
+							href="HttpChannel?action=SHOW_SYS_INFO&logexecutetime=5&online=true">5s</a>、
+						<a
+							href="HttpChannel?action=SHOW_SYS_INFO&logexecutetime=10&online=true">10s</a>、
+						<a
+							href="HttpChannel?action=SHOW_SYS_INFO&logexecutetime=20&online=true">20s</a>
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						在线人数：
+					</td>
+					<td>
+						#{SessionSize}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						数据库连接池信息：
+					</td>
+					<td>
+						#{new com.xmzy.frameext.dbpool.SmartPoolFactory().getPoolInfo()}
+					</td>
+				</tr>
+
+			</table>
+
+		</div>
+		<div id="tab2" class="tab_content">
+			<span style="display:'#{online==1 ?'':'none'}'"> <br />
+				<table align="center" border="0" width='100%'>
+					<tr height="28">
+						<td nowrap="nowrap" align="right" width="180">
+							全局系统参数：
+						</td>
+						<td>
+							<a class="button" href="#" onclick="initPram(1);return(false);">重新初始化</a>
+						</td>
+					</tr>
+
+					<tr height="28">
+						<td nowrap="nowrap" align="right" width="180">
+							系统代码参数：
+						</td>
+						<td>
+							<a class="button" href="#" onclick="initPram(3);return(false);">重新初始化</a>
+						</td>
+					</tr>
+					
+					<tr height="28">
+						<td nowrap="nowrap" align="right" width="180">
+							菜单及权限：
+						</td>
+						<td>
+							<a class="button" href="#" onclick="initPram(5);return(false);">重新初始化</a>
+						</td>
+					</tr>
+					
+					<tr height="28">
+						<td nowrap="nowrap" align="right" width="180">
+							所有缓存：
+						</td>
+						<td>
+							<a class="button" href="#" onclick="initPram('all');return(false);">重新初始化</a>
+						</td>
+					</tr>
+
+					<tr>
+						<td nowrap="nowrap" align="right" width="180">
+							在线人员信息：
+						</td>
+						<td>
+							#{SessionIDList}
+						</td>
+					</tr>
+				</table> </span>
+
+		</div>
+		<div id="tab3" class="tab_content">
+			<table align="center" border="0" width='100%'>
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						操作系统：
+					</td>
+					<td>
+						#{os_name +os_version}&nbsp;&nbsp;Patch：#{sun_os_patch_level}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						IP地址：
+					</td>
+					<td>
+						#{computer_ip}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						机器名：
+					</td>
+					<td>
+						#{computer_name}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						内存总数：
+					</td>
+					<td>
+						#{totalMemory}K
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						剩余内存总数：
+					</td>
+					<td>
+						#{freeMemory}K
+						<a class="button" href="#" onclick="if(confirm('确认[虚拟机强制垃圾回收]？')) {form1.submit();return false ;} else return(false);">虚拟机强制垃圾回收</a>
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						Java 运行时环境版本：
+					</td>
+					<td>
+						#{java_version}
+					</td>
+				</tr>
+
+				<tr>
+					<td nowrap="nowrap" align="right" width="180">
+						Java 虚拟机实现版本：
+					</td>
+					<td>
+						#{java_vm_version}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						Java 安装目录：
+					</td>
+					<td>
+						#{java_home}
+					</td>
+				</tr>
+
+				<tr>
+					<td nowrap="nowrap" align="right" width="180">
+						Java 类路径：
+					</td>
+					<td>
+						#{java_class_path}
+					</td>
+				</tr>
+
+				<tr>
+					<td nowrap="nowrap" align="right" width="180">
+						加载库时搜索的路径列表：
+					</td>
+					<td>
+						#{java_library_path}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						时区：
+					</td>
+					<td>
+						#{user_timezone}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						文件编码(file.encodig)：
+					</td>
+					<td>
+						#{file_encoding}
+					</td>
+				</tr>
+
+				<tr height="28">
+					<td nowrap="nowrap" align="right" width="180">
+						sun jnu 编码(sun.jnu.encoding)：
+					</td>
+					<td>
+						#{sun_jnu_encoding}
+					</td>
+				</tr>
+
+			</table>
+		</div>
+	</div>
+	</div>
+	<form action="HttpChannel?action=SHOW_SYS_INFO" method="post" style="display:'#{online==1 ?'':'none'}'" name='form1'>
+		<input type="text" style="display: none;" value="true" name="gc" />
+		<input type="text" style="display: none;" value="true" name="online" />
+	</form>
+</body>
+
+</html>

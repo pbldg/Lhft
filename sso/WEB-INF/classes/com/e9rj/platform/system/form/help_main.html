@@ -1,0 +1,647 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>HELP MAIN</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+	<script type="text/javascript" src="/e9common/js/hktree.js"></script>
+	<script type="text/javascript" src="/e9common/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript" src="/e9common/ckeditor/adapters/jquery.js"></script>
+	<script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+    <!-- 文件上传 -->
+    <script type="text/javascript" src="/e9common/swfupload/swfupload/swfupload.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/swfupload.queue.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/fileprogress.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/handlers.js"></script>
+	<script type="text/javascript" src="/e9common/js/icon.js"></script>
+    <script type="text/javascript">
+    window.onerror = function() { return true; }; 
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=platform.help";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=platform.help";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=platform.help";
+    var saveAction = "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.help";
+    //树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false,
+    		},
+    		edit: {
+				enable: true,
+				showRemoveBtn: false,
+				showRenameBtn: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				beforeDrop: beforeDrop
+			}
+		};
+	var filesetting = {
+			edit: {
+				enable: true,
+				showRenameBtn: false,
+    			showIcon: false,
+    			showLine: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				beforeDrop: beforeDrop
+			}
+		};
+	var fileNodes =[
+	 			
+	 		];
+	var zNodes,popNodes,tmpNodes,fileNodes,fileTree;
+	$(document).ready(function () {
+		//初始化文件上传组件，参数：url,文件大小(单位k),文件类型,文件个数（目前只支持1个，有必要再扩展）
+			initSwfUpload("spanButtonPlaceholder","fsUploadProgress","btnCancel","/zkxj/FileUpload?INPUT_CODE=TMPNAME&INPUT_NAME=FILENAME/zkxj/FileUpload?INPUT_CODE=TMPNAME&INPUT_NAME=FILENAME","10240","*.*","1","/e9common/",function(file){
+			var fTree = $.fn.zTree.getZTreeObj("fileTree");
+			fTree.addNodes(null, {id:$("#TMPNAME").val(), pId:0, isParent:false, name:file.name,tmpname:$("#TMPNAME").val(),icon:"/e9common/jquery/ztree/css/zTreeStyle/img/diy/cog_add.png"});
+		});
+		//ckeditor********
+		var config = {
+				height:"120px",
+				extraPlugins : 'uicolor',
+				removePlugins:'elementspath',
+				resize_enabled:false,
+				uiColor: "#F7F7F7",
+				filebrowserUploadUrl : 'ckeditor/uploader?Type=File',
+				filebrowserImageUploadUrl : 'ckeditor/uploader?Type=Image',
+				filebrowserFlashUploadUrl : 'ckeditor/uploader?Type=Flash',
+				toolbar:
+				[
+					//[ 'Source' , '-' , 'Save' , 'NewPage' , 'Preview' , '-' , 'Templates' ],
+					//[ 'Cut' , 'Copy' , 'Paste' , 'PasteText' , 'PasteFromWord' , '-' , 'Print' , 'SpellChecker' , 'Scayt' ],
+					[ 'Undo' , 'Redo' , '-' , 'Find' , 'Replace' , '-' , 'SelectAll' , 'RemoveFormat' ],
+					//[ 'Form' , 'Checkbox' , 'Radio' , 'TextField' , 'Textarea' , 'Select' , 'Button' , 'ImageButton' , 'HiddenField' ],
+					[ 'Bold' , 'Italic' , 'Underline' , 'Strike' , '-' , 'Subscript' , 'Superscript' ],
+					//[ 'NumberedList' , 'BulletedList' , '-' , 'Outdent' , 'Indent' , 'Blockquote' ],
+					[ 'JustifyLeft' , 'JustifyCenter' , 'JustifyRight' ],
+					[ 'Link' , 'Unlink' ],
+					[ 'Image' , 'Flash' , 'Table' , 'HorizontalRule' , 'SpecialChar' , 'PageBreak' ],
+					[ 'TextColor' , 'BGColor' ],
+					[ 'Source','Maximize' ]
+				]
+			};
+		$('.jquery_ckeditor').ckeditor(config);
+		//**********end********
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//加载树数据
+		reloadTree();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		$( "#buttonset" ).buttonset();
+		
+		//resize绑定
+		$(window).bind('resize', function(){
+			var objHeight = getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#buttonDiv").height()-40;
+			$("#contentDiv").height(objHeight);
+			$("#menuTree").height(objHeight - $("#S_COLUMNTYPE").height()-20);
+			$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height()-50);
+			$("#popTree").height(objHeight-150);
+			$("#popTree").width($("#PARENTTITLE").width()-30);
+			
+		}).trigger('resize');	
+		
+		$("#infoTable").styleTable();
+	  	
+		$.fn.zTree.init($("#menuTree"), setting, zNodes);
+		
+		setCheck('menuTree');
+		$.fn.zTree.init($("#popTree"), setting, popNodes);
+		$.fn.zTree.init($("#fileTree"), filesetting, fileNodes);
+		
+		
+		$("#expandBtn").bind("click", {type:"expandAll"}, expandNode);
+		$("#collapseBtn").bind("click", {type:"collapseAll"}, expandNode);
+		$("#saveBtn").bind("click", saveInfo);
+		//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.help", function(data){
+			//alert("1111");
+            reloadTree();
+		});
+		//默认展开菜单
+		$("#expandBtn").click();
+
+	});
+	function reloadTree(){
+		//重新加载树
+    	loadTreeData();
+
+    	var zTree = $.fn.zTree.init($("#menuTree"), setting, zNodes);
+    	zTree.refresh();
+    	
+    	//展开原来的节点
+    	var pNode = zTree.getNodeByParam("id",$("#PARENTHELPID").val());
+    	zTree.expandNode(pNode, true, null, null);
+
+    	$("#OLDHELPID").val($("#HELPID").val());
+    	if($("#CMD").val()=="A"){
+    		toAdd();//新增
+    	}
+	}
+	//加载树数据
+	function loadTreeData(){
+		//加载普通树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: queryAction + "&TREETYPE=&PUB=0&COLUMNTYPE="+$("#S_COLUMNTYPE").val(),//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+		//加载弹出树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: queryAction + "&TREETYPE=pop&PUB=0&COLUMNTYPE="+$("#S_COLUMNTYPE").val(),//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	            tmpNodes = data;
+	        }  
+	    });  
+		
+	}
+	//加载附件
+	function loadAttachedData(fid){
+		//加载附件树树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.help&BIZMETHODNAME=getAttached&TABLENAME=TS_HELP&FID="+fid,//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	        	fileNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        	var fTree = $.fn.zTree.init($("#fileTree"), filesetting, fileNodes);
+	        	fTree.refresh();
+	        }  
+	    });  
+	}
+	//取单个菜单信息
+	function getHelpinfo(helpId){
+		$("#infoForm")[0].reset();
+		$.hkajax( 
+	        gotoAction + "&HELPID="+helpId,//请求的action路径  
+	        "",
+	        {
+	        	success:function(data){ //请求成功后处理函数。    
+		            //alert(data.CAPTION);
+	        		$("#COLUMNTYPE").val($("#S_COLUMNTYPE").val());
+		        	$("#HELPID").val(data.HELPID);
+		        	$("#ISPUBLISH").val(data.ISPUBLISH);
+		        	$("#OLDHELPID").val($("#HELPID").val());
+		        	$("#TITLE").val(data.TITLE);
+		        	$("#PARENTHELPID").val(data.PARENTHELPID);
+		        	$("#PARENTTITLE").val(data.PARENTTITLE);
+		        	CKEDITOR.instances['SCONTENT'].setData(data.SCONTENT);
+		        	CKEDITOR.instances['CONTENT'].setData(data.CONTENT);
+		        	$("input[name='ISGROUP'][value='"+data.ISGROUP+"']").attr("checked",true);
+		        	$("#ORDIDX").val(data.ORDIDX);
+		        	$("#FROMSITE").val(data.FROMSITE);
+		        	
+		        	//Tile
+		        	$("#BgColorStyle").val(data.BGCOLORSTYLE);
+		        	$("#Height").val(data.HEIGHT);
+		        	$("#Width").val(data.WIDTH);
+		        	$("#OutlineStyle").val(data.OUTLINESTYLE);
+		        	$("#Direction").val(data.DIRECTION);
+		        	$("#TileStyle").val(data.TILESTYLE);
+		        	$("#SlidePeriodTime").val(data.SLIDEPERIODTIME);
+		        	$("#SlideDurationTime").val(data.SLIDEDURATIONTIME);
+					$("#SlideDirection").val(data.SLIDEDIRECTION);
+					
+		        	$("#CMD").val("U");
+		        	//取附件信息
+		        	loadAttachedData(data.HELPID);
+		        }	
+	        });  
+	}
+	//显示弹出树
+	function showMenu() {
+		tmpNodes = popNodes;
+		$.fn.zTree.init($("#popTree"), setting, tmpNodes);
+		var popTree = $.fn.zTree.getZTreeObj("popTree");
+		popTree.expandAll(true);
+		//过滤掉当前节点以子节点
+		var currId = $("#HELPID").val();
+		var pNode = popTree.getNodeByParam("id",currId);
+		//zTree.removeChildNodes(pNode);
+		popTree.removeNode(pNode);
+		
+		var cityObj = $("#PARENTTITLE");
+		var cityOffset = $("#PARENTTITLE").offset();
+		$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"}).slideDown("fast");
+
+		$("body").bind("mousedown", onBodyDown);
+	}
+	function hideMenu() {
+		$("#menuContent").fadeOut("fast");
+		$("body").unbind("mousedown", onBodyDown);
+	}
+	function onBodyDown(event) {
+		if (!(event.target.id == "menuBtn" 
+			|| event.target.id == "menuContent" 
+				|| $(event.target).parents("#menuContent").length>0
+				)) {
+			$("#menuContent").fadeOut("fast");
+			$("body").unbind("mousedown", onBodyDown);
+		}
+	}
+	//设置父节点信息
+	function setHelpinfo(id,name){
+		$("#PARENTTITLE").val(name);
+		$("#PARENTHELPID").val(id);
+	}
+	//设置function信息
+	function getFunctionInfo(id,name){
+		$("#FUNCNAME").val(name);
+		$("#FUNCNO").val(id);
+		//取动作信息
+		getActionInfo(id);
+	}
+	//取动作信息
+	function getActionInfo(funcNo){
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.action&BIZMETHODNAME=queryActionInfo&FUNCNO="+funcNo;
+		$.hkajax(url,"",{
+			success:function(data){ //请求成功后处理函数。    
+				$("#RIGHTVALTD").html("");
+	        	$.each(data.Rows,function(i,item){
+	        		$("#RIGHTVALTD").append('<input type="checkbox" name="RIGHT" id="RIGHT'+i+'" value="'+item.ACTID+'" onclick="calRightVal()" data-validation-engine="validate[minCheckbox[1]]">'+item.ACTNAME+'&nbsp;');
+	        	});
+	        	//选中默认功能值
+	        	setRightVal();
+	        }  
+		})
+	}
+	//选中默认功能值
+	function setRightVal(){
+		var rightVal = $("#RIGHTVAL").val();
+		if(rightVal=="")return;
+		$.each($("input[name='RIGHT']"),function(i,item){
+			if(($(item).val()&rightVal) == $(item).val()){
+				$(this).attr("checked",true);
+			}
+		});
+	}
+	//计算rightval的值
+	function calRightVal(){
+		var tmpVal = 0;
+		$.each($("input[name='RIGHT']"),function(i,item){
+			if($(this).attr("checked")){
+				tmpVal += parseInt($(this).val());
+			}
+		});
+		$("#RIGHTVAL").val(tmpVal);
+	}
+	//删除菜单
+	function delMenu(){
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+		if(nodes==""){
+			$.uialert("请选择数据!");
+			return;
+		}
+		
+		$.uiconfirm("确定要删除吗？", "确认提示",
+	      function() {
+			var id = nodes[0].id;
+			var url = delAction + "&HELPID="+id;
+			jQuery.ajax({
+		        url: url,   // 提交的页面
+		        data: "", // 从表单中获取数据
+		        type: "POST",                   // 设置请求类型为"POST"，默认为"GET"
+		        dataType:"json",
+		        error: function(request) {      // 设置表单提交出错
+		            $.uialert("删除出错，请稍候再试");
+		        },
+		        success: function(data) {
+		        	
+		            var result = data.result;
+		            $.uimessage(result);
+		            if(result.indexOf("成功")>0){
+		            	//删除弹出树节点
+		            	var popTree = $.fn.zTree.getZTreeObj("popTree");
+		        		var popNode = popTree.getNodeByParam("id",id);
+		        		popTree.removeNode(popNode);
+		        		popNodes = remove(popNodes,"id",id);
+		        		//删除普通树节点
+		        		var zNode = zTree.getNodeByParam("id",id);
+		        		zTree.removeNode(zNode);
+		        		//重置 表单
+		        		$("#infoForm")[0].reset();
+		            }
+		        }
+		    });
+	      });
+	}
+	//跳转到添加
+	function toAdd(){
+		fileNodes = [];
+		var fTree = $.fn.zTree.init($("#fileTree"), filesetting, fileNodes);
+    	fTree.refresh();
+		CKEDITOR.instances['SCONTENT'].setData("");
+		CKEDITOR.instances['CONTENT'].setData("");
+		$('#COLUMNTYPE').val($('#S_COLUMNTYPE').val());
+		$("#infoForm")[0].reset();
+		$("#CMD").val("A");
+		
+		//设置默认父编号为当前选中节点
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+
+		if(nodes==null || nodes==""){
+			$("#PARENTHELPID").val("0");
+			$("#PARENTTITLE").val($('#S_COLUMNTYPE').find("option:selected").text());
+			return;
+		}
+		var id = nodes[0].id;
+		
+		if(id==null || id=="")return;
+		var zNode = zTree.getNodeByParam("id",id);
+		$("#PARENTHELPID").val(zNode.id);
+		$("#PARENTTITLE").val(zNode.name);	
+	}
+	
+	function readonlyObjectName(flag){
+		if(flag=="y"){
+			$("#OBJECTNAME").val("");
+			$("#OBJECTNAME").attr("readonly","readonly");
+		}
+		if(flag=="n"){
+			$("#OBJECTNAME").removeAttr("readonly");
+		}
+	}
+	function resetAction(){
+		$("#RIGHTVALTD").html("");
+		$("#FUNCNO").val("-1");
+		$("#FUNCNAME").val("");
+	}
+	//保存
+	function saveInfo(){
+		var fTree = $.fn.zTree.getZTreeObj("fileTree");
+		var nodes = fTree.getNodes();
+		var fileNames = "";
+		var trueNames = "";
+		$.each(nodes,function(i,item){
+			fileNames += "," + item.id;
+			trueNames += "," + item.name;
+		});
+		if(fileNames!=""){
+			$("#FILENAMES").val(fileNames.substring(1));
+		}
+		if(trueNames!=""){
+			$("#TRUENAMES").val(trueNames.substring(1));
+		}
+
+    	$('#infoForm').submit();
+    }
+	function downloadFile(attaNo){
+		location.href="HttpChannel?action=DOWNLOADFILE_ACTION&ATTANO="+attaNo;
+	}
+    </script>
+    <style type="text/css">
+    	ul.ztree {width:230px;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;">
+	</div>
+	<table id="contentDiv" width="100%">
+		<tr>
+			<td valign="top" width="236" id="lefttd">
+				信息栏目: <select name="S_COLUMNTYPE" id="S_COLUMNTYPE" style="width:180px;" onchange="reloadTree();return(true);"></select><br><br>
+				<ul id="menuTree" class="ztree ui-widget-content ui-corner-all"></ul>
+			</td>
+			<td width="20">
+				<img src="/e9common/images/promotion.png" onclick="$('#lefttd').toggle();" style="cursor:pointer;">
+			</td>
+			<td align="left" valign="top" style="margin-left: 5px;">
+				<form method="post" name="infoForm" id="infoForm">
+					<input type="hidden" name="COLUMNTYPE" id="COLUMNTYPE">
+					<input type="text" style="display: none;" name="CMD" id="CMD" value="A">
+					<div id="infoTableDiv" style="overflow: auto;">
+					<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable" class="full" >
+						<!-- 为了样式协调必需要 -->
+						<tr style="height: 1px;">
+							<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+						</tr>
+						<!-- ***end*** -->
+
+						<tr>
+							<td height="33" width="60" align="right" >标题：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="TITLE" id="TITLE" >
+							</td>
+							<td height="33" width="60" align="right" >是否发布：</td>
+							<td align="left">
+							    <select style="width:140px;" name="ISPUBLISH" id="ISPUBLISH" ></select>
+							</td>
+						</tr>
+						<tr>
+							<td height="33" align="right" >上级：</td>
+							<td align="left">
+								<input type="text" style="width:90%" name="PARENTTITLE" id="PARENTTITLE" onclick="showMenu();" readonly="readonly">
+							    <input type="text" style="display: none;" name="PARENTHELPID" id="PARENTHELPID" value="0">
+							</td>
+							<td height="33" align="right" >ID：</td>
+							<td align="left" >
+							    <input type="text" style="width:140px;" name="HELPID" id="HELPID" readonly>
+							</td>
+						</tr>
+						<tr style="display: none;">
+							<td height="33" align="right" >排序：</td>
+							<td align="left">
+							    <input type="text" style="width:90%" name="ORDIDX" id="ORDIDX" >
+							</td>
+							<td height="33" align="right" >是否目录：</td>
+							<td align="left">
+							    <input type="radio" id="ISGROUP1" name="ISGROUP" value="1"/>是
+								<input type="radio" id="ISGROUP2" name="ISGROUP" value="0" checked="checked"/>否		    
+							</td>
+						</tr>
+						<tr>
+							<td height="33" align="right" >信息来源：</td>
+							<td align="left">
+							     <input type="text" style="width:90%" name="FROMSITE" id="FROMSITE">
+							</td>
+							<td height="33" align="right" ></td>
+							<td align="left">
+							     
+							</td>
+						</tr>					
+						<tr>
+							<td height="33" align="right" >简单内容：</td>
+							<td align="left" colspan="3">
+							    <textarea class="jquery_ckeditor"  name="SCONTENT" id="SCONTENT" ></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td height="33" align="right" >详细内容：</td>
+							<td align="left" colspan="3">
+							    <textarea class="jquery_ckeditor"  name="CONTENT" id="CONTENT" ></textarea>
+							</td>
+						</tr>
+						<tr>
+							<td height="33" align="right" >附件：</td>
+							<td align="left" colspan="3">
+								<ul id="fileTree" class="ztree" style="width:500px;height:100px;"></ul>
+								<input type="text" id="FILENAME" name="FILENAME" style="vertical-align: middle;float:left;display: none;">
+								<input type="text" id="TMPNAME" name="TMPNAME" style="vertical-align: middle;float:left;display: none;">
+								<span id="spanButtonPlaceholder" style="vertical-align: middle;float:left;"></span>
+								<input id="btnCancel" type="button" value="取消" onclick="cancelQueue(upload);" disabled="disabled" style="margin-left: 2px; height: 22px; font-size: 8pt;display: none;float:left;" />
+								<div class="flash" id="fsUploadProgress" style="clear: left;"></div>
+								<input type="text" style="display: none;" id="FILENAMES" NAME="FILENAMES">
+								<input type="text" style="display: none;" id="TRUENAMES" NAME="TRUENAMES">
+							</td>
+						</tr>
+						<tr>
+			                <td height="33" align="center" colspan="4">以下为显示在栏目页中的磁贴属性配置</td>
+			           </tr>
+						<tr>
+			                <td height="33" align="right" >底色样式：</td>
+			                <td align="left" >
+			                	<select style="width:150px;" id="BgColorStyle" name="BgColorStyle">
+			                		<option value="">默认</option>
+			                	</select>
+			                </td>
+			                <td height="33" align="right" >宽度列数：</td>
+			                <td align="left" >
+			                	<select id="Width" name="Width" style="width:150px;">
+			                		<option value="1">1</option>
+			                		<option value="2" selected>2</option>
+			                		<option value="3">3</option>
+			                		<option value="4">4</option>
+			                		<option value="5">5</option>
+			                		<option value="6">6</option>
+			                	</select>
+			                </td>	
+						</tr>
+						<tr>
+			            <td height="33" align="right" >hover边框样式：</td>
+			                <td align="left">
+			                	<select style="width:150px;" id="OutlineStyle" name="OutlineStyle">
+			                		<option value="">默认</option>
+			                	</select>
+			                </td>
+							<td height="33" align="right" >高度行数：</td>
+			                <td align="left" >
+			                	<select id="Height" name="Height" style="width:150px;">
+			                		<option value="1">1</option>
+			                		<option value="2" selected>2</option>
+			                		<option value="3">3</option>
+			                		<option value="4">4</option>
+			                	</select>
+			                </td>	
+						</tr>	
+						<tr>
+			                <td height="33" align="right" >方向：</td>
+			                <td align="left" >
+			                	<select id="Direction" name="Direction" style="width:150px;">
+			                		<option value="1">水平</option>
+			                		<option value="2">垂直</option>
+			                	</select>
+			                </td>
+			                <td height="33" align="right" >磁贴类型：</td>
+			                <td align="left" >
+			                	<select id="TileStyle" name="TileStyle" style="width:150px;">
+			                		<option value="">默认</option>
+			                		<option value="icon">图标</option>
+			                		<option value="image">图片</option>
+			                		<option value="image-slider">图片幻灯</option>
+			                		<option value="image-set">图片集</option>
+			                	</select>
+			                </td>	
+						</tr>	
+						<tr>
+			                <td height="33" align="right" >幻灯切换时间：</td>
+			                <td align="left" >
+			                	间隔：<input type="text" id="SlidePeriodTime" name="SlidePeriodTime" style="width:150px;"/>
+			                	<br/>持续：<input type="text" id="SlideDurationTime" name="SlideDurationTime" style="width:150px;"/>
+			                </td>
+			                <td height="33" align="right" >幻灯动画方向：</td>
+			                <td align="left" >
+			                	<select id="SlideDirection" name="SlideDirection" style="width:150px;">
+			                		<option value=""></option>
+			                		<option value="left">向左</option>
+			                		<option value="right">向右</option>
+			                		<option value="up">向上</option>
+			                		<option value="down">向下</option>
+			                	</select>
+			                </td>	
+						</tr>
+			        </table>
+			     </div>
+			    </form>
+			</td>
+		</tr>
+	</table>
+    <div id="buttonDiv" style="position:absolute;bottom:10px;left:3px;">
+		<span id="buttonset">
+			<button id="addBtn" rightval="2" onclick="toAdd()"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="delBtn" rightval="8" onclick="delMenu()"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+
+			<button id="expandBtn"><span class="ui-icon ui-icon-folder-open" style="float: left;"></span>展开</button>
+			<button id="collapseBtn"><span class="ui-icon ui-icon-folder-collapsed" style="float: left;"></span>折叠</button>
+
+			<button id="saveBtn" type="button"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>
+		</span>
+	</div>
+	<div id="menuContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popTree" class="ztree" style="margin-top:0; width:160px;"></ul>
+	</div>
+	<div id="menuFuncContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popFuncTree" class="ztree" style="margin-top:0; width:160px;"></ul>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="HELP_BEAN.getCmd()"/>
+	<var name="S_COLUMNTYPE" codesrcsql="SELECT CNO,CVALUE FROM sso.TS_CODE WHERE CATEGORYNO = 'COLUMNTYPE' ORDER BY ORDIDX" codevisible="false"/><!-- 栏目类型 -->
+	<var name="ISPUBLISH" codesrcsql="SELECT CNO,CVALUE FROM sso.TS_CODE WHERE CATEGORYNO = 'YN' ORDER BY ORDIDX" codevisible="false"/><!-- 是否发布 -->
+
+	<var name="TITLE" required="true" validate="required,maxSize[50]"/><!-- 标题 -->
+	<var name="CONTENT" required="false" validate="maxSize[65535]"/><!-- 内容 -->
+	<var name="PARENTHELPID" required="false" validate="maxSize[20]"/><!-- PID -->
+	<var name="ORDIDX" required="false" validate="maxSize[10]"/><!-- 排序 -->
+	
+	<var name="BgColorStyle" codesrcsql="select CNO,CVALUE from sso.TS_CODE where CATEGORYNO='TILEBG' order by ORDIDX" codevisible="false"/><!-- 底色样式 -->	
+	<var name="OutlineStyle" codesrcsql="select CNO,CVALUE from sso.TS_CODE where CATEGORYNO='TILEBG' order by ORDIDX" codevisible="false"/><!-- 边框样式 -->
+	<var name="BrandBgColorStyle" codesrcsql="select CNO,CVALUE from sso.TS_CODE where CATEGORYNO='TILEBG' order by ORDIDX" codevisible="false"/><!-- 底牌底色类型 -->
+<!--Form Setting End-->

@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/edittop.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript" src="/e9common/js/ztreecommon.js"></script>
+    <script type="text/javascript">
+    //树设置
+    var setting = {
+    		check: {
+				enable: true
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+	var zNodes,zTree,roleAuthNodes;
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//加载树数据
+		loadTreeData();
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式
+		$( "input:button, a, button", "div" ).button();
+		//按钮
+		$( "#buttonset" ).buttonset();
+		$( "#treeBtn" ).buttonset();
+		//初始化树
+		zTree = $.fn.zTree.init($("#menuTree"), setting, zNodes);
+		setCheck();
+		//选中默认角色权限
+		checkRoleAuth();
+		
+		$("#menuTree").height($(window).height()-100);
+		$("#menuTree").width("98%");
+		$("#expandBtn").bind("click", {type:"expandAll"}, expandNode);
+		$("#collapseBtn").bind("click", {type:"collapseAll"}, expandNode);
+		//清除没有子节点的第一层节点
+		clearNoChildNode();
+		//默认展开第一层
+		expandFirstLevel("menuTree","1");
+    });
+  	//清除没有子节点的第一层节点
+    function clearNoChildNode(){
+    	var nodes = zTree.getNodesByParam("pId", "1", null);
+    	if(nodes.length>0){
+    		$.each(nodes,function(i,item){
+    			if(!nodes[i].children){
+    				zTree.removeNode(nodes[i]);
+    			}
+    		});
+    	}
+    }
+  	//加载树数据
+	function loadTreeData(){
+		//加载普通树
+		$.hkajax(
+				"HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.action&TREETYPE=AUTH&ROLEID=#{ROLE_BEAN.get('ROLEID')}",//请求的action路径  
+				"",
+		        {
+			        success:function(data){ //请求成功后处理函数。    
+			        	zNodes = data.treeNodes;   //把后台封装好的简单Json格式赋给treeNodes  
+			        	roleAuthNodes = data.roleAuthNodes;   //把后台封装好的简单Json格式赋给treeNodes
+			        }  
+		        });  
+	}
+	//设置checkbox
+	function setCheck() {
+		zTree.setting.check.chkboxType = { "Y" : "ps", "N" : "ps" };
+	}
+	//展开/关闭节点
+	function expandNode(e) {
+		type = e.data.type;
+		if (type == "expandAll") {
+			zTree.expandAll(true);
+		} else if (type == "collapseAll") {
+			zTree.expandAll(false);
+		}
+	}
+	//此方法必须留着
+	function getActionObject(){
+		
+	}
+	//保存权限
+    function saveAuthInfo(){
+		var nodes = zTree.getCheckedNodes(true);
+		var ids = "";
+		$.each(nodes,function(i,item){
+			if(!item.getCheckStatus().half && !item.isParent){
+				ids = ids + "," + item.id;
+			}
+		})
+		if(ids!=""){
+			ids = ids.substring(1);
+		}
+		$.hkajax(
+		        "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.role!saveAuthority",//请求的action路径  
+		        "ROLEID=#{ROLE_BEAN.get('ROLEID')}&AHTU="+ids,
+		        {
+			        success:function(data){ //请求成功后处理函数。    
+			        	var result = data.result;
+						$.uimessage(result);
+						if(result.indexOf("成功")>0){
+	                		cancel();
+	                	}
+			        }  
+		        });  
+    }
+    function filter(node) {
+        return (node.pId!=null && node.pId.indexOf("_")==0);
+    }
+	//选中默认角色权限
+	function checkRoleAuth(){
+		var nodes = zTree.getNodesByFilter(filter); // 查找节点集合
+		$.each(nodes,function(i,node){
+			$.each(roleAuthNodes,function(j,role){
+				if(node.funcNo==role.id && (node.actid&role.rightVal)==node.actid){
+					zTree.checkNode(node,true,true);
+				}else{
+					//zTree.removeNode(node);
+				}
+			});
+		});
+	}
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<input type="text" style="display: none;" name="CMD" id="CMD">
+	<span id="treeBtn" style="margin-left: 6px;">
+		<button id="expandBtn">展开</button>
+		<button id="collapseBtn">折叠</button>
+	</span>
+	<span class="ui-widget-content" style="position:absolute;right:20px;top:10px; border: 0px;">
+		&nbsp;&nbsp;&nbsp;&nbsp;
+	角色名：#{ROLE_BEAN.get('ROLENAME')}
+	</span>
+	<div style="position:absolute;width: 100%;border-bottom:0px;top:40px;" class="ui-widget-content"></div>
+	<ul style="position:absolute;top:50px;" id="menuTree" class="ztree"></ul>
+	<!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="addBtn" onclick="saveAuthInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>

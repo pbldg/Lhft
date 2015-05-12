@@ -1,0 +1,84 @@
+		<script>
+			var g_js_num=7;
+		</script>
+		<SCRIPT language="javascript" src="../js/boot.js"></SCRIPT>
+		<SCRIPT language="javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+		<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+		<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script>
+		<script type="text/javascript">
+		$(function(){
+			//主题切换
+			addThemeSwitcher('head',{ top: '0px', right: '0px' });
+			$("#flow_graph_div").css("height",parent.$("#flow_graph_iframe").contents().find("body").height()-40);
+			if($.browser.safari) {
+				$("#flow_graph_div").css("overflow","auto");
+			}else{
+				$("#flow_graph_iframe").css("height","100%");
+			}
+			$("#id_table_do_model").styleTable2();
+			$("#id_table_todo_model").styleTable2();
+		});
+		</script>
+		<textarea id="WF_FLOW_JSON_DATA" style="display: none;"></textarea>
+		<textarea id="WF_TODO_JSON_DATA" style="display: none;"></textarea>
+		<textarea id="WF_DO_JSON_DATA" style="display: none;"></textarea>
+		<table style="width: 100%;height: 100%;" id="wflow_info">
+			<tr height='30'>
+				<td colspan="2" style="font-size: 14;font-weight: bold;">
+					&nbsp;流程名称：<span id="id_span_flow_name"></span>
+				</td>
+			</tr>
+			<tr valign="top">
+				<td>
+					<div id="flow_graph_div">
+						<iframe id="flow_graph_iframe" width="100%" style="border: none;"  src=""></iframe>
+					</div>
+					<span style="display: none" id='id_span_do_table_model'>
+						<table id="id_table_do_model">
+							<!-- 为了样式协调必需要 -->
+							<tr style="height: 1px;">
+								<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+							</tr>
+							<!-- ***end*** -->	
+							<tr height="30" valign="middle">
+								<td colspan="4" align="left"  style="font-weight: bold;">
+									已办环节：<span id='span_model_activity_name'></span>
+								</td>
+							</tr>
+							<tr>
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">序号</td> 
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">操作结果</td>
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">操作人</td>
+								<td align="center" nowrap="nowrap"bgcolor="#F6F5EE">操作意见</td>
+							</tr>
+						</table>
+					</span>
+					<span style="display: none" id='id_span_todo_table_model'>
+						<table id="id_table_todo_model">
+							<!-- 为了样式协调必需要 -->
+							<tr style="height: 1px;">
+								<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+							</tr>
+							<!-- ***end*** -->	
+							<tr height="30" valign="middle">
+								<td colspan="4" align="left" style="font-weight: bold;">
+									待办环节：<span id='span_todo_model_activity_name'></span>
+								</td>
+							</tr>
+							<tr>
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">待办人</td>
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">发送人</td>
+								<td align="center" nowrap="nowrap" bgcolor="#F6F5EE">到达时间</td>
+							</tr>
+						</table>
+					</span>
+				</td>
+				<td width="200px;">
+					<div id="id_td_do_html" style="overflow-y: auto;">
+					</div>					
+				</td>
+			</tr>
+		</table>		

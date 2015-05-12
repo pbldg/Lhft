@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    var gridUrl = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sso.employee!queryEmployeeOrg&EMPLOYEE_ID=#{PRIMARYKEYVALUE}";
+    $(function(){
+    	$("#ORG_OP").val(1);
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮
+		$( "#buttonset2" ).buttonset();
+		
+		var lastSel;
+		$.grid(
+				"gridTable#{TABLENAME}",
+				"",
+				"",
+				"",
+				{
+					rowNum:"20",
+					datatype:'local',
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+								TABLENAME, 
+						com.e9rj.platform.form.FormParseFacade.getSearchListString("sso.employee.orgedit")
+						)},
+			    	onSelectRow:function(rowid){
+			    		//jQuery('#gridTable').jqGrid('editRow',rowid,true);
+			    		//删除模板span中的name属性，否则提交的数据会有问题
+			    		//$(".editable > span").removeAttr("name");
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable#{TABLENAME}",rowid);
+			    		var rowData = $("#"+"gridTable#{TABLENAME}").jqGrid("getRowData", rowid);  
+						var url = gotoAction + "&TPLID="+rowData.TPLID+"&TMP="+new Date();
+						popReadInfo(url,"查看信息",globalPopWidthLong,globalPopHeightLong);
+			    	},
+			    	gridComplete: function () {
+			    	},
+			    	loadComplete:function(){
+			    		$("#"+"gridTable#{TABLENAME}").setGridHeight(350);
+			    		$("#"+"gridTable#{TABLENAME}").setGridWidth(792);
+			    		for(var i=0;i<$("#"+"gridTable#{TABLENAME}").getGridParam("reccount");i++){
+							$("#"+"gridTable#{TABLENAME}").jqGrid('editRow',i+1);
+						}
+			        }
+				});
+		  //添加组织机构
+		$("#addOrgBtn").click(addOrg);
+		//删除组织机构
+		$("#delOrgBtn").live('click',function(){
+			var toDelete = $("#"+"gridTable#{TABLENAME}").jqGrid('getGridParam','selarrrow');
+			var orgIdStr = "";
+			for(var i=0;i<toDelete.length;i++){
+				if($("#"+toDelete[i]+"_EMPLOYEE_ORG_ID").val()!=""){
+					orgIdStr += $("#"+toDelete[i]+"_ORG_ID").val()+",";
+				}
+			}
+			//判断用户登录表是否已经关联了该组织机构，如果关联了，提示是否删除
+			var delflag = true;
+			if(orgIdStr!=""){
+				var url = COMMON_ACTION + "sso.employee!getEmployeeOrgInTsOp&EMPLOYEE_ID="+$("input[name$='.EMPLOYEE_ID']").val()+"&ORG_ID_STR="+orgIdStr;
+				$.hkajax(url,"",{
+					success:function(data){
+						if(data!=null && data!="" && data.result != null && data.result!=""){
+							var str = data.result.split(",");
+							$.each(data.result.split(","),function(i,item){
+								delflag = confirm("["+item.split(";")[0]+"]已经关联了账号["+item.split(";")[1]+"]，删除将会导致该账号无法登录，确定删除吗？");
+							});
+						}
+						if(delflag==true){
+							for(var i=0;i<toDelete.length;){
+								$("#"+"gridTable#{TABLENAME}").delRowData(toDelete[i]);
+							}
+						}
+					}
+				});
+			}
+			
+			
+		});
+		
+		loadEmployeeOrgInfo();
+    });
+	//添加组织机构
+  	function addOrg(orgId,postId,deptId,key){
+  		var rowid = $("#"+"gridTable#{TABLENAME}").getGridParam("reccount")+1;
+        $("#"+"gridTable#{TABLENAME}").jqGrid('addRow',{  
+            rowID : "id"+rowid,  
+            initdata : {},  
+            position :"first",  
+            useDefValues : true,  
+            useFormatter : true,  
+            addRowParams : {extraparam:{  
+                  
+            }}  
+        }); 
+        
+      	//当前新增id进入可编辑状态  
+        $("#"+"gridTable#{TABLENAME}").jqGrid('editRow',"id"+rowid);  
+      	//加载下拉框数据
+      	loadInfoByOrgId("id"+rowid,orgId,postId,deptId,key);
+  	}
+
+	function loadInfoByOrgId(rowId,defOrgId,defPostId,defDeptId,key){
+		
+		var id = rowId+"_ORG_ID";
+		$("#"+id).html($("#ORG_SELECT").html());
+		if(defOrgId!=""){
+			$("#"+id).val(defOrgId);
+		}
+		if(key!=""){
+			$("#"+rowId+"_EMPLOYEE_ORG_ID").val(key);
+		}
+		$("#"+id).change(function(){
+			loadPost(this.value,rowId,defPostId,defDeptId);
+			loadDept(this.value,rowId,defPostId,defDeptId);
+		});
+		var orgId = $("#"+id).val();
+		loadPost(orgId,rowId,defPostId);
+		loadDept(orgId,rowId,defDeptId);
+	}
+	//加载岗位下拉框数据
+	function loadPost(orgId,rowId,defPostId){
+		var url = COMMON_ACTION+"sys.syscode!getCodeListByOrgId&CODECATEGORY=POST&ORG_ID="+orgId;
+		changeChildSelect(rowId+"_POST_ID",url,defPostId);
+	}
+	//加载部门数据
+	function loadDept(orgId,rowId,defDeptId){
+		var url = COMMON_ACTION+"platform.org!getDeptInfoByOrgId&ORG_ID="+orgId;
+		changeChildSelect(rowId+"_DEPT_ID",url,defDeptId);
+	}
+	//加载用户组织机构信息
+	function loadEmployeeOrgInfo(){
+		$.hkajax(gridUrl,"",{
+			success:function(data){
+				if(data!=null && data!=""){
+					$.each(data.Rows,function(i,item){
+						addOrg(item.ORG_ID,item.POST_ID,item.DEPT_ID,item.EMPLOYEE_ORG_ID);
+					});
+				}
+			}
+		});
+	}
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+<select id="ORG_SELECT" name="ORG_SELECT" style="display: none;"></select>
+		<input type="text" style="display: none;" name="CMD" id="CMD"/>
+		<span id="buttonset2">
+			<button id="addOrgBtn" type="button" onclick=""><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="delOrgBtn" type="button" onclick=""><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+		</span>
+		<div id="contentTabs" style="width: 99.5%">
+			<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" >
+				<table id="gridTable#{TABLENAME}" class="ui-pg-table"></table>  
+		        <div id="gridPager#{TABLENAME}" style="height: 36px"></div>
+			</div>
+		</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="ORG_SELECT" codesrcsql="SELECT ORGCODE,ORGNAME FROM TS_ORG WHERE PARENTORGCODE='0'"/>
+<!--Form Setting End-->

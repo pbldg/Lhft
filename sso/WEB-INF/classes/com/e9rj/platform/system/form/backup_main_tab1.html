@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+	$(document).ready(function () {
+		author(auth);
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"",
+				{
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'[{name:"TABLE_SCHEMA",index:"TABLE_SCHEMA",label:"数据库",width:"80px"},' +
+						'{name:"TABLE_NAME",index:"TABLE_NAME",label:"表名"},' +
+						'{name:"TABLE_KEY",index:"TABLE_KEY",label:"主健"},' +
+						'{name:"TABLE_COMMENT",index:"TABLE_COMMENT",label:"备注"}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv','contentDiv',true);
+			    	}
+				});
+		
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv',true)});
+		
+		//判断分页设置
+		checkPager("gridTable");
+		//把按钮拷到主页面
+		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
+		//初始化按钮事件
+		initBtn();
+		$( "#buttonset" ).buttonset();
+	});
+    
+    </script>
+</head>
+<body >
+    <div id="contentDiv" tabLogo="#{tabLogo}">
+		<table id="gridTable"></table>  
+        <div id="gridPager" style="height: 36px"></div>
+		<span id="buttonset">
+			<button id="backupBtn" rightval="2" style="width: 110px;"><span class="ui-icon ui-icon-plus" style="float: left;"></span>开始备份</button>
+		</span>
+    </div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/file.html"/>
+	<script type="text/javascript" src="js/ssocommon.js"></script>
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTable2").styleTable();
+		//按钮样式
+    	//验证表单
+    	var readonly = "#{FORM_IS_READONLY}";
+    	if(readonly!="true"){
+    		commonValidate("infoForm");	//查看时不验证
+    	}
+    	
+    	
+		if($.browser.mozilla) $("select").each(function(){$(this).width($(this).outerWidth()-2)});//firefox下减2px，应对宽度不一致的问题
+		
+		$("#editContentDiv").height(window.top.$("#topIframe").height()-82);
+		
+		loadHeadImage();
+		
+    });
+    function saveInfo(){
+    	$("#PRIMARYKEY").val($("input[primarykey]").attr("name"));
+    	handleFile("PHOTO");//多种附件用豆号隔开
+    	$('#infoForm').submit();
+    }
+	function selectUser(){
+		popUser($("#OPNO").val(), "#{ALIAS_TABLENAME}\\\\.OPNO", "#{ALIAS_TABLENAME}\\\\.OPNAME", "POP", 1, "");
+	}
+	//文件上传成功后，显示图片
+	function fileUploadSuccessCallback(file){
+		var tmpFileName = file.ATTACHFILENAME;//临时文件名
+		$("#imgShow").attr("src","tmpfiles/"+tmpFileName);
+	}
+	function loadHeadImage(){
+		var url = COMMON_ACTION + "sso.employee!showHeadImage&USER_ID=#{TS_EMPLOYEE_BEAN.get('EMPLOYEE_ID')}";
+		$.hkajax(url,"",{
+			success:function(data){
+				$("#imgShow").attr("src", "data:image/" + data.IMGTYPE + ";base64," + data.IMGDATA);
+			}
+		})
+		
+	}
+
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+		<input type="text" style="display: none;" name="CMD" id="CMD"/>
+		<input type="text" style="display: none;" name="PRIMARYKEY" id="PRIMARYKEY"/>
+		<div id="editContentDiv" style="overflow-y:auto;">
+			<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable2" class="full" >
+				<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="" style="height: 1px;"/></td>
+				</tr>
+				<!-- ***end*** -->	
+				#{com.e9rj.platform.form.FormParseFacade.getEditPageFormString('sso.employee.edit')}	
+				<tr>
+					<td align="right">照片：</td>
+					<td>
+						#{com.e9rj.platform.util.SwfUploadUtil.file('TS_EMPLOYEE','PHOTO','PHOTO',TS_EMPLOYEE_BEAN.get('EMPLOYEE_ID'),true,60,'*.*')}
+					</td>
+					<td colspan="2">
+						<img id="imgShow" alt="" src="">
+					</td>
+				</tr>
+	        </table>
+        </div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="BEAN.getCmd()"/>
+	#{com.e9rj.platform.form.FormParseFacade.getEditPageFormSettingString('sso.employee.edit')}
+<!--Form Setting End-->

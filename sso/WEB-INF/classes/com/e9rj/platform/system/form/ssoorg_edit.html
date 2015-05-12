@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+    <script type="text/javascript">
+    //树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false
+    		},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+    var popNodes,tmpNodes,popTree;
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTable2").styleTable();
+		//按钮样式
+		$( "input:button, a, button", "div" ).button();
+    	//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitInfoForm(
+				"infoForm", 
+				"HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=sys.sso.org");
+		//按钮
+		$( "#buttonset" ).buttonset();
+		
+		$("#editContentDiv").height(window.top.$("#topIframe").height()-42);
+    });
+	
+	
+    function saveInfo(){
+    	if($("#PARENTORGNAME").val()==""){
+    		$.uialert("请选择上级机构");
+    		return;
+    	}
+    	$('#infoForm').submit();
+    }
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD">
+		<div id="editContentDiv" style="overflow-y:auto;">
+		<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable2" class="full" >
+			<!-- 为了样式协调必需要 -->
+			<tr style="height: 1px;">
+				<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+			</tr>
+			<!-- ***end*** -->
+			<tr>
+				<td height="30" align="right" >组织编号：</td>
+				<td align="left" >
+				    <input type="text" style="width:85%" name="ORGCODE" id="ORGCODE" >
+				    <input type="text" style="width:85%;display: none;" name="OLDORGCODE" id="OLDORGCODE" >
+				    <input type="text" style="width:85%;display: none;" name="CONTEXTCODE" id="CONTEXTCODE" >
+				    <input type="text" style="width:85%;display: none;" name="ORDIDX" id="ORDIDX" >
+				</td>
+				<td height="30" align="right" >名称：</td>
+				<td align="left" >
+				    <input type="text"  name="ORGNAME" id="ORGNAME" >
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >上级机构：</td>
+				<td align="left" >
+				    <input type="text" name="PARENTORGNAME" id="PARENTORGNAME" value="#{ssoUserInfo.get('ORG_NAME')}"  readonly="readonly">
+				    <input type="text" style="width:85%;display: none;" name="PARENTORGCODE" value="#{ssoUserInfo.get('ORGCODE')}" id="PARENTORGCODE" >
+				    <span style="color: red;">*</span>
+				</td>
+				<td height="30" align="right" >类别：</td>
+				<td align="left" >
+				    <select name="ORGTYPE" id="ORGTYPE" ></select>
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >主要负责人：</td>
+				<td align="left" >
+				    <input type="text"  name="CHARGER_CODE" id="CHARGER_CODE" >
+				</td>
+				<td height="30" align="right" >英文名：</td>
+				<td align="left" >
+				    <input type="text"  name="ENGNAME" id="ENGNAME" >
+				</td>
+				
+			</tr>
+			<tr>
+				<td height="30" align="right" >法定代表人：</td>
+				<td align="left" >
+				    <input type="text"  name="CORPMAN" id="CORPMAN" >
+				</td>
+				<td height="30" align="right" >联系人：</td>
+				<td align="left" >
+				    <input type="text"  name="CONTACT" id="CONTACT" >
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >地址：</td>
+				<td align="left" >
+				    <input type="text"  name="ADDRESS" id="ADDRESS" >
+				</td>
+				<td height="30" align="right" >办公电话：</td>
+				<td align="left" >
+				    <input type="text"  name="TEL" id="TEL" >
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >移动电话：</td>
+				<td align="left" >
+				    <input type="text"  name="MOBILE" id="MOBILE" >
+				</td>
+				<td height="30" align="right" >传真：</td>
+				<td align="left" >
+				    <input type="text"  name="FAX" id="FAX" >
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >邮箱：</td>
+				<td align="left" >
+				    <input type="text"  name="EMAIL" id="EMAIL" >
+				</td>
+				<td height="30" align="right" >邮编：</td>
+				<td align="left" >
+				    <input type="text"  name="ZIP" id="ZIP" >
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >网址：</td>
+				<td align="left" >
+				    <input type="text"  name="WEBSITE" id="WEBSITE" >
+				</td>
+				<td height="30" align="right" >是否激活：</td>
+				<td align="left" >
+				    <input type="radio" id="ENABLED1" name="ENABLED" value="1" checked="checked"/>是
+					<input type="radio" id="ENABLED2" name="ENABLED" value="0"/>否			
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >开户银行：</td>
+				<td align="left" >
+				    <input type ="text" name="BANK" id="BANK" ></input>
+				</td>
+					<td height="30" align="right" >账户：</td>
+				<td align="left" >
+				    <input type ="text" name="ACCOUNT" id="ACCOUNT" ></input>
+				</td>
+			</tr>
+			<tr>
+				<td height="30" align="right" >描述：</td>
+				<td align="left" colspan="3">
+				    <textarea class="calculateElement" name="DESCRIPTION" id="DESCRIPTION" ></textarea>
+				</td>
+			</tr>
+        </table>
+        </div>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			#{FORM_IS_READONLY=="true"?'':'<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>'}
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+	<div id="menuContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popTree" class="ztree" style="margin-top:0; width:260px;"></ul>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="CMD" value="ORG_BEAN.getCmd()"/>
+<var name="ORGCODE" value="ORG_BEAN.get('ORGCODE')" required="true" validate="required,maxSize[20]"/><!-- 组织编号 -->
+<var name="OLDORGCODE" value="ORG_BEAN.get('ORGCODE')"/><!-- 组织编号 -->
+<var name="ORGNAME" value="ORG_BEAN.get('ORGNAME')" required="true" validate="required,maxSize[50]"/><!-- 名称 -->
+<var name="PARENTORGCODE" value="ORG_BEAN.get('PARENTORGCODE')" /><!-- 上级机构 -->
+<var name="PARENTORGNAME" value="#{com.e9rj.platform.common.CodeNameConvert.getName('ORG','ORG',ORG_BEAN.get('PARENTORGCODE'))=='0'?'顶级':com.e9rj.platform.common.CodeNameConvert.getName('ORG','ORG',ORG_BEAN.get('PARENTORGCODE'))}" /><!-- 上级机构 -->
+<var name="ENGNAME" value="ORG_BEAN.get('ENGNAME')" required="false" validate="maxSize[50]"/><!-- 英文名 -->
+<var name="CHARGER_CODE" value="ORG_BEAN.get('CHARGER_CODE')" required="false" validate="maxSize[20]"/><!-- 主要负责人 -->
+<var name="ENABLED" value="ORG_BEAN.get('ENABLED')" required="false" validate="maxSize[1],custom[number]"/><!-- 是否激活 -->
+<var name="CORPMAN" value="ORG_BEAN.get('CORPMAN')" required="false" validate="maxSize[20]"/><!-- 法定代表人 -->
+<var name="CONTACT" value="ORG_BEAN.get('CONTACT')" required="false" validate="maxSize[20]"/><!-- 联系人 -->
+<var name="ADDRESS" value="ORG_BEAN.get('ADDRESS')" required="false" validate="maxSize[100]"/><!-- 地址 -->
+<var name="TEL" value="ORG_BEAN.get('TEL')" required="false" validate="maxSize[20]"/><!-- 办公电话 -->
+<var name="MOBILE" value="ORG_BEAN.get('MOBILE')" required="false" validate="maxSize[20]"/><!-- 移动电话 -->
+<var name="FAX" value="ORG_BEAN.get('FAX')" required="false" validate="maxSize[20]"/><!-- 传真 -->
+<var name="EMAIL" value="ORG_BEAN.get('EMAIL')" required="false" validate="maxSize[50],custom[email]"/><!-- 邮箱 -->
+<var name="ZIP" value="ORG_BEAN.get('ZIP')" required="false" validate="maxSize[10]"/><!-- 邮编 -->
+<var name="WEBSITE" value="ORG_BEAN.get('WEBSITE')" required="false" validate="maxSize[50],custom[url]"/><!-- 网址 -->
+<var name="DESCRIPTION" value="ORG_BEAN.get('DESCRIPTION')" required="false" validate="maxSize[200]"/><!-- 描述 -->
+<var name="ORDIDX" value="ORG_BEAN.get('ORDIDX')" required="false" validate="maxSize[4],custom[number]"/><!-- 排序 -->
+<var name="ORGTYPE" value="ORG_BEAN.get('ORGTYPE')" cachedata="SYSCODE,ORGTYPE"/><!-- 机构类型 -->
+<var name="CONTEXTCODE" value="ORG_BEAN.get('CONTEXTCODE')" /><!-- 上下文代码 -->
+<var name="BANK" value="ORG_BEAN.get('BANK')" /><!-- 开户银行 -->
+<var name="ACCOUNT" value="ORG_BEAN.get('ACCOUNT')" /><!-- 账户 -->
+<var name="REMARK" value="ORG_BEAN.get('REMARK')" /><!-- 备注 -->
+<!--Form Setting End-->

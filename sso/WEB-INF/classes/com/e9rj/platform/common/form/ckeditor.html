@@ -1,0 +1,33 @@
+	<script type="text/javascript" src="/e9common/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript" src="/e9common/ckeditor/adapters/jquery.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			//ckeditor********
+			var config = {
+					height:"120px",
+					extraPlugins : 'uicolor',
+					removePlugins:'elementspath',
+					resize_enabled:false,
+					uiColor: "#F7F7F7",
+					filebrowserUploadUrl : 'ckeditor/uploader?Type=File',
+					filebrowserImageUploadUrl : 'ckeditor/uploader?Type=Image',
+					filebrowserFlashUploadUrl : 'ckeditor/uploader?Type=Flash',
+					toolbar:
+					[
+						//[ 'Source' , '-' , 'Save' , 'NewPage' , 'Preview' , '-' , 'Templates' ],
+						//[ 'Cut' , 'Copy' , 'Paste' , 'PasteText' , 'PasteFromWord' , '-' , 'Print' , 'SpellChecker' , 'Scayt' ],
+						[ 'Undo' , 'Redo' , '-' , 'Find' , 'Replace' , '-' , 'SelectAll' , 'RemoveFormat' ],
+						//[ 'Form' , 'Checkbox' , 'Radio' , 'TextField' , 'Textarea' , 'Select' , 'Button' , 'ImageButton' , 'HiddenField' ],
+						[ 'Bold' , 'Italic' , 'Underline' , 'Strike' , '-' , 'Subscript' , 'Superscript' ],
+						//[ 'NumberedList' , 'BulletedList' , '-' , 'Outdent' , 'Indent' , 'Blockquote' ],
+						[ 'JustifyLeft' , 'JustifyCenter' , 'JustifyRight' ],
+						[ 'Link' , 'Unlink' ],
+						[ 'Image' , 'Flash' , 'Table' , 'HorizontalRule' , 'SpecialChar' , 'PageBreak' ],
+						[ 'TextColor' , 'BGColor' ],
+						[ 'Source','Maximize' ]
+					]
+				};
+			$('.jquery_ckeditor').ckeditor(config);
+			//**********end********
+		});
+	</script>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!-- 配置文件 -->
+<Config xmlns="http://app/action" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://app/action DefAction.xsd">
+	
+	<Action id="PLATFORM_MAIN_ACTION">
+		<Description>程序主入口</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.system.action.PlatformMainAction" onOtherDo="next" on0Do="error" isresult="true" />
+			<ActionStep id="3" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/main.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="SAVE_MYSELF_FORM_TABLE_SETTING">
+		<Description>保存个人表格配置</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.system.action.MyselfFormTableSetting" on0Do="5" onOtherDo="next" isresult="true" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="READ_MYSELF_FORM_TABLE_SETTING">
+		<Description>读取个人表格配置</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.system.action.ReadTableSetting" onOtherDo="next" on0Do="error" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="CHANGEPASSWORD">
+		<Description>修改用户密码</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.system.action.ChangePasswordAction" on1Do="next" isresult="true" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/system/form/changepassword.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+</Config>

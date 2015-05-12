@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/file.html"/>
+	<link rel="stylesheet" type="text/css" href="tip/theme/style.css" />
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    var tableCode = "";
+    $(function(){
+
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTable2").styleTable();
+		//按钮样式
+		$( "input:button,  button", "div" ).button();
+    	//验证表单
+    	var readonly = "#{FORM_IS_READONLY}";
+    	if(readonly!="true"){
+    		commonValidate("infoForm");	//查看时不验证
+    	}
+    	
+    	
+		//表单提交
+		submitInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=form.metadata",function(){
+			$("#TBLTYPE").val(tableCode);
+		});
+		//按钮
+		$( "#buttonset" ).buttonset();
+		
+		if($.browser.mozilla) $("select").each(function(){$(this).width($(this).outerWidth()-2)});//firefox下减2px，应对宽度不一致的问题
+		
+		$("#editContentDiv").height(window.top.$("#topIframe").height()-42);
+		
+		getTableFields("TBLTYPE",'FLDNAME',"#{TB_FIELD_BEAN.get('FLDNAME')}");
+		if("#{TB_FIELD_BEAN.get('KEYTYPE')}"=="F"){
+			$("#foreignTr").css("display","");
+		}
+		//$('.tTip').betterTooltip({speed: 150, delay: 300});
+    });
+    function saveInfo(){
+    	var selectedText = $("#TBLTYPE").find("option:selected").text();
+    	tableCode = $("#TBLTYPE").val();
+    	var connId = selectedText.split("-")[2];
+    	var tableschema = selectedText.split("-")[3];
+    	if(connId == "请选择"){
+    		connId = "";
+    	}
+    	$("#CONNID").val(connId);
+    	$("#TABLESCHEMA").val(tableschema);
+    	handleFile("FILENAME1,FILENAME2");
+    	$('#infoForm').submit();
+    }
+	function unCheckedOther(obj){
+		if(obj.value=="F" && obj.checked){
+			$("#foreignTr").css("display","");
+		}else{
+			$("#foreignTr").css("display","none");
+			$("#FOREIGNKEYTABLE").val("");
+			$("#FOREIGNKEYTABLEFIELDCODE").val("");
+		}
+		$.each($("input[type='checkbox'][name='KEYTYPE']"),function(i,item){
+			if($(item).val()!=obj.value){
+				$(item).attr("checked",false);
+			}
+		});
+	}
+	function setCaptionValue(){
+		if($("#CMD").val()!="A"){
+			return;
+		}
+		var dataType = $("#FLDNAME").find("option:selected").attr("dataType");
+		var columnSize = $("#FLDNAME").find("option:selected").attr("columnSize");
+		var isNullable = $("#FLDNAME").find("option:selected").attr("isNullable");
+		$('#FLDCAPTION').val($("#FLDNAME").find("option:selected").text());
+		if(dataType == "String"){
+			$("#DATATYPE").val("C");
+		}else if(dataType == "Float" || dataType == "Double"){
+			$("#DATATYPE").val("F");
+		}else if(dataType == "Integer" || dataType == "Long"){
+			$("#DATATYPE").val("N");
+		}else if(dataType == "java.util.Date"){
+			$("#DATATYPE").val("D");
+		}
+		if(columnSize!="0"){
+			$("#MAXLENGTH").val(columnSize);
+		}
+		if(isNullable=="NO"){
+			$("#MINLENGTH").val(1);
+			$("input[name='CHECKRULE'][value='required']").attr("checked",true);
+		}else if(isNullable=="YES"){
+			$("#MINLENGTH").val(0);
+			$("input[name='CHECKRULE'][value='required']").attr("checked",false);
+		}
+	}
+	//根据表名，取表字段列表
+	function getTableFields(tableSelectId,fieldSelectId,defaultFieldName){
+		var tableName = $("#"+tableSelectId).find("option:selected").val();
+		var selectedText = $("#"+tableSelectId).find("option:selected").text();
+		var connId = selectedText.split("-")[2];
+		var schema = selectedText.split("-")[3];
+		if(connId == "请选择"){
+			connId = "";
+		}
+		if(tableName!=""){
+			changeFieldSelect(fieldSelectId,'HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=form.metadata!queryFieldsByTable&TABLE_NAME='+tableName+"&CONN_ID="+connId+"&SCHEMA="+schema,defaultFieldName);
+		}
+	}
+	//级联下拉框
+	function changeFieldSelect(childSelectedId,url){
+		$.hkajax(url,"",{
+			success:function(data){
+				$("#"+childSelectedId).html("");
+				$("#"+childSelectedId).append("<option value=''></option>");
+				$.each(data.Rows,function(i,item){
+					var selected = "";
+					if(item.CODE=="#{TB_FIELD_BEAN.get('FLDNAME')}"){
+						selected = "selected";
+					}
+					$("#"+childSelectedId).append("<option value='"+item.CODE+"' "+ selected +" dataType='"+item.DATA_TYPE+"' columnSize='"+item.COLUMN_SIZE+"' isNullable='"+item.IS_NULLABLE+"'>"+item.NAME+"</option>");
+				});
+				$("#"+childSelectedId).change();
+			}
+		});
+	}
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD"/>
+		<div id="editContentDiv" style="overflow-y:auto;">
+			<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable2" class="full" >
+				<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+				</tr>
+				<!-- ***end*** -->										
+				<tr>						
+	                <td align="right" style="width: 102px;">表名：</td>
+	                <td align="left" >
+	                	<select id="TBLTYPE" name="TBLTYPE" onchange="getTableFields('TBLTYPE','FLDNAME','')"></select>
+	                	<input type="text" style="display: none;" id="FLDID" name="FLDID"/>
+	                	<input type="text" style="display: none;" id="CONNID" name="CONNID"/>
+	                	<input type="text" style="display: none;" id="TABLESCHEMA" name="TABLESCHEMA"/>
+	                </td>
+	                <td align="right" style="width: 87px;">源表字段：</td>
+	                <td align="left" >
+	                	<select id="FLDNAME" name="FLDNAME" onchange="setCaptionValue()"></select>
+	                </td>
+				</tr>													
+				<tr>						
+	                <td align="right" >字段名称：</td>
+	                <td align="left" >
+	                	<input type="text" id="FLDCAPTION" name="FLDCAPTION" style="width: 100px;"/>
+	                	<input type="checkbox" id="KEYTYPE1" name="KEYTYPE" value="P" onclick="unCheckedOther(this)">主键
+	                	<input type="checkbox" id="KEYTYPE2" name="KEYTYPE" value="F" onclick="unCheckedOther(this)">外键
+	                </td>	
+	                <td align="right" >长度：</td>
+	                <td align="left" >
+	                	<input type="text" id="MINLENGTH" name="MINLENGTH" style="width: 40px;"/>
+	                	-
+	                	<input type="text" id="MAXLENGTH" name="MAXLENGTH" style="width: 40px;"/>
+	                </td>
+				</tr>
+				<tr>						
+	                <td align="right" >数据类型：</td>
+	                <td align="left" >
+	                	<select id="DATATYPE" name="DATATYPE" ></select>
+	                </td>
+	                <td align="right" >数据源：</td>
+	                <td align="left" >
+	                	<select id="DATASOURCE" name="DATASOURCE">
+	                	</select>
+	                </td>	
+				</tr>
+				<tr>						
+	                <td align="right" >是否多选：</td>
+	                <td align="left" >
+	                	<input type="radio" id="MULTIVALUE1" name="MULTIVALUE" value="1"/>是
+	                	<input type="radio" id="MULTIVALUE0" name="MULTIVALUE" value="0" checked="checked"/>否
+	                </td>
+	                <!-- 
+	                <td align="right" >是否使用：</td>
+	                <td align="left" >
+	                	<input type="radio" id="ENABLED1" name="ENABLED" value="1" checked="checked"/>是
+	                	<input type="radio" id="ENABLED0" name="ENABLED" value="0"/>否
+	                </td> 
+	                -->		
+	                <td align="right" >缺省值：</td>
+	                <td align="left" >
+	                	<input type="text" class="tTip" title="这是一个提示框中华人民共和国<br>这是一个提示框<br>这是一个提示框<br>这是一个提示框<br>这是一个提示框" id="DEFAULTVALUE" name="DEFAULTVALUE"/>
+	                </td>
+				</tr>	
+				<tr id="foreignTr" style="display: none;">
+					<td align="right" >外键关联表名：</td>
+	                <td align="left">
+	                	<input type="text" id="FOREIGNKEYTABLE" name="FOREIGNKEYTABLE"/>
+	                </td>
+					<td align="right" >关联字段名：</td>
+	                <td align="left">
+	                	<input type="text" id="FOREIGNKEYTABLEFIELDCODE" name="FOREIGNKEYTABLEFIELDCODE"/>
+	                </td>
+				</tr>	
+				<tr>						
+	                <td align="right" >验证规则：</td>
+	                <td align="left" colspan="3">
+	                	<input type="checkbox" id="CHECKRULE" name="CHECKRULE">
+	                </td>	 	
+				</tr>		
+				
+	        </table>
+        </div>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<span style="position:absolute;bottom:5px;left:15px;vertical-align: middle;">
+		<input type="checkbox" id="closeChecked">保存后关闭
+	</span>
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="cancelBtn2" onclick="cancel()" style="width: 107px"><span class="ui-icon ui-icon-close" style="float: left;"></span>全部导入</button>	
+			#{FORM_IS_READONLY=="true"?'':'<button id="addBtn" onclick="saveInfo()" class="tTip"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>'}
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>	
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="TB_FIELD_BEAN.getCmd()"/>
+	<var name="FLDID" value="TB_FIELD_BEAN.get('FLDID')"/><!-- -->
+	<var name="TBLTYPE" value="TB_FIELD_BEAN.get('TBLTYPE')" codesrcsql="SELECT TABLECODE, TABLE_INFO FROM V_METATABLE" emptyoption="true" validate="required"/><!-- -->
+	<var name="KEYNO" value="TB_FIELD_BEAN.get('KEYNO')"/><!-- -->
+	<var name="FLDNAME" value="TB_FIELD_BEAN.get('FLDNAME')" validate="required"/><!-- -->
+	<var name="FLDCAPTION" value="TB_FIELD_BEAN.get('FLDCAPTION')" validate="required"/><!-- -->
+	<var name="EXTENDED" value="TB_FIELD_BEAN.get('EXTENDED')" validate="required"/><!--  -->
+	<var name="DATATYPE" value="TB_FIELD_BEAN.get('DATATYPE')" cachedata="SYSCODE,METADATA_TYPE" emptyoption="true" validate="required"/><!-- -->
+	<var name="DATASOURCE" value="TB_FIELD_BEAN.get('DATASOURCE')" codesrcsql="SELECT CNO,CNAME FROM TS_CODECATEGORY" emptyoption="true"/><!-- -->
+	<var name="MULTIVALUE" value="TB_FIELD_BEAN.get('MULTIVALUE')" validate=""/><!-- -->
+	<var name="MAXLENGTH" value="TB_FIELD_BEAN.get('MAXLENGTH')" validate="custom[integer]"/><!-- -->
+	<var name="MINLENGTH" value="TB_FIELD_BEAN.get('MINLENGTH')" validate="custom[integer]"/><!-- -->
+	<var name="CHECKRULE" value="TB_FIELD_BEAN.get('CHECKRULE')" cachedata="SYSCODE,VALIDATE_RULES" emptyoption="true"/><!-- -->
+	<var name="ENABLED" value="TB_FIELD_BEAN.get('ENABLED')" /><!-- -->
+	<var name="DEFAULTVALUE" value="TB_FIELD_BEAN.get('DEFAULTVALUE')" /><!-- -->
+	<var name="OPLIMIT" value="TB_FIELD_BEAN.get('OPLIMIT')"/><!-- -->
+	<var name="ORDIDX" value="TB_FIELD_BEAN.get('ORDIDX')" /><!-- -->
+	<var name="KEYTYPE" value="TB_FIELD_BEAN.get('KEYTYPE')" /><!-- -->
+	<var name="FOREIGNKEYTABLE" value="TB_FIELD_BEAN.get('FOREIGNKEYTABLE')" /><!-- -->
+	<var name="FOREIGNKEYTABLEFIELDCODE" value="TB_FIELD_BEAN.get('FOREIGNKEYTABLEFIELDCODE')" /><!-- -->
+<!--Form Setting End-->

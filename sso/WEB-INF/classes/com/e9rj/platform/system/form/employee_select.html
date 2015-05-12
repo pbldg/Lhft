@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sso.employee!queryEmployee";
+	$(document).ready(function () {
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		var schoolId = "";
+		// 配置jqGrid组件  
+		$.grid("gridTable", queryAction, $("#searchform").serialize(), "gridPager", {
+			colModel: [
+				{name:"OPNO",index:"OPNO",label:"登录账号",width:"40"},																											
+				{name:"OPNAME",index:"OPNAME",label:"账号姓名"},																											
+				{name:"SEX",index:"SEX",label:"性别",width:"40",align:"center"}																											
+        	],
+	    	ondblClickRow:function(rowid,iRow,iCol,e){ 
+	    		setValue(rowid);
+	    	},
+	    	loadComplete: function () {
+    			resizePopWindowGrid('gridTable','heightDiv,queryDiv,buttonDiv','contentDiv');
+    			setContextMenu("gridTable","contentDiv");
+    			resetPage("gridPager");
+	    	},
+	    	gridComplete: function () {}
+		});
+		
+		$( "#buttonset" ).buttonset();
+		//end****************************************
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			commonQuery(queryAction, "gridTable", "searchform", "searchBtn"); 
+		});
+		
+		//关闭按钮
+		$("#closeBtn").click(function(){
+			closePop("userDialog");
+		});
+		
+		//确定按钮
+		$("#okBtn").click(function(){
+			setValue("");
+		});
+	});
+	
+	function setValue(selectedId){
+		if(!selectedId){
+			selectedId = getSelectedCheckbox("gridTable");
+		}
+		if(selectedId == ""){
+			$.uimessage("请选择一条数据!");
+			return;
+		}
+		
+		var ids = selectedId.split(",");
+		var onlyOne = "#{USER_BEAN.get('ONLYONE')}";
+		if(onlyOne == "true" && ids.length > 1){
+			$.uimessage("只能选择一条数据!");
+			return;
+		}
+		
+		var opno = "", opno = "", opname = ""; 
+		$.each(ids, function(i, item){
+			var rowData = $("#gridTable").jqGrid("getRowData", item); 
+			opno += "," + rowData.OPNO;
+			opname += "," + rowData.OPNAME; 
+		});
+		
+		if(opno!=""){
+			opno = opno.substring(1);
+		}
+		if(opname!=""){
+			opname = opname.substring(1);
+		}
+		
+		if('#{USER_BEAN.get("POP_SOURCE")}'=='POP'){
+			window.top.$("#topIframe").contents().find('#'+'#{USER_BEAN.get("CODE_INPUT_ID")}').val(opno);
+			window.top.$("#topIframe").contents().find('#'+'#{USER_BEAN.get("NAME_INPUT_ID")}').val(opname);
+			if('#{USER_BEAN.get("CALLBACK")}'!=""){
+				var obj = new Object();
+				obj.opno = opno;
+				obj.opname = opname;
+				eval('window.top.$("#topIframe")[0].contentWindow.'+'#{USER_BEAN.get("CALLBACK")}(obj)');
+			}
+		}
+		
+		if($("#closeChecked").attr("checked")){
+			closePop("userDialog");
+		}
+	}
+    </script>
+</head>
+<body>
+    <div class="ui-layout-center">
+   		<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+				<div>
+				<form id="searchform" onSubmit="return false" style="margin:0;">
+					登录账号：<input id="OPNO" name="OPNO" />		
+					账号姓名：<input id="OPNAME" name="OPNAME" />	
+					<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+				</form>
+			</div>
+			</fieldset>
+		</div>
+		<script type="text/javascript">
+			createSelectCondition();
+		</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+		</div>
+    </div>
+   <!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<span style="position:absolute;bottom:5px;left:15px;vertical-align: middle;">
+		<input type="checkbox" id="closeChecked" checked="checked"/>选择后关闭
+	</span>
+	<div id="buttonDiv" style="position:absolute;bottom:3px;right:16px;">
+		<span id="buttonset">
+			<button id="okBtn"><span class="ui-icon ui-icon-check" style="float: left;"></span>确定</button>
+			<button id="closeBtn"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>
+		</span>
+    </div>
+    <div id="heightDiv" style="height: 43px;"></div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="QS_TYPE" cachedata="SYSCODE,OE_QS_TYPE" value="USER_BEAN.get('QS_TYPE')" codevisible="false" emptyoption="true" /><!-- -> 
+<!--Form Setting End-->

@@ -1,0 +1,98 @@
+<html>
+	<head>
+		<META http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<script>
+			var g_js_num=2;
+			var g_pic_num=4;
+		</script>
+		<SCRIPT language="javascript" src="../js/boot.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+		<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+		<script type="text/javascript" src="/e9common/js/uiwindow.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script> 
+		<script>
+			function savaFlowData(flag){
+				//保存之前，先检查下是否满足规则
+				
+				var s=checkFlow();
+				if(s!=""){
+					alert(s);
+					return;
+				}
+				
+				var v_json=$("#id_textarea_json",parent.document).val();
+				if(v_json && v_json!=undefined){
+					$("#id_textarea_json",parent.document).val(JSON.stringify(jsonData_workflow));
+					parent.savaFlowData(flag);
+				}else{
+					alert(JSON.stringify(jsonData_workflow));
+				}
+			}
+			$(document).ready(function () {
+				//主题切换
+				addThemeSwitcher('head',{ top: '0px', right: '0px' });
+				//$("#svg_div").css("height",parent.$("#wf_main_iframe").contents().find("body").height()-50);
+				if($.browser.safari) {
+					$("#svg_div").css("overflow","auto");
+					setTimeout(function(){
+						if($("#svg_iframe").height()<$("#svg_div").height()){
+							$("#svg_iframe").height($("#svg_div").height());
+						}
+					},100);
+				}else{
+					$("#svg_iframe").css("height","100%");
+				}
+				$( "#buttonset" ).buttonset();
+			});
+		</script>
+	</head>
+	<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" style="overflow: auto;" >
+		<table width="100%" height='100%'  id="id_table_iframe" style="display: none;">
+			<tr height='30'>
+				<td colspan="2">
+					<span id="buttonset">
+						<input type='button' id='id_button_2' onclick='savaFlowData(0);return false;' value='保存'/>		
+						<input type='button' id='id_button_2' onclick='savaFlowData(1);return false;' value='保存并更新版本'/>		
+						<input type='button' id='id_button_2' onclick='var s=checkFlow();if(s!=""){$.uialert(s);}else{$.uialert("检查通过！");}return false;' value='检查'/>		
+						<input type='button' id='id_button_2' onclick='show2HideDiv(1);$("#div_iframe").attr("src","wf_propertyInfo.html");return false;' value='参数属性'/>
+						<input type='button' id='id_button_2' onclick='resetSvgData();return false;' value='清空'/>
+						<input type='button' id='id_button_2' onclick='show2HideDiv(1);$("#div_iframe").attr("src","JSONeditor/JSONeditor.html");return false;' value='JSON数据'/>
+						<input type="hidden" id="dddd" value="测试用">
+					</span>
+					&nbsp;画板：【
+								<select id="id_flow_pic" onchange="changeFlowPic(1);" style="display: none;">
+								</select>
+								<select onchange="setHeight(this.value);">
+									<option value="100%" selected>高100%</option>
+									<option value="1000">高1000</option>
+									<option value="1500">高1500</option>
+							  </select>
+							  <select onchange="setWidth(this.value);">
+									<option value="100%" selected>宽100%</option>
+									<option value="1000">宽1000</option>
+									<option value="1500">宽1500</option>
+							  </select>
+							】
+				  <span style='display:none;' id='id_svg_obj'></span>
+				</td>
+			</tr>
+			<tr>
+				<td style='min-width:400;min-height:400;' valign="top">
+					<div id="svg_div" style="height: 500px;">
+						<iframe id='svg_iframe' name='svg_iframe' src="" width="100%" style='border:none;'></iframe>
+					</div>
+				</td>
+				<td width="200" valign='top'>
+					<iframe name='property_iframe' id='property_iframe' src='' height="99%" style='border:none;overflow-y: auto;'></iframe>
+				</td>
+			</tr>
+		</table>
+		<div id="div_bg"></div>
+		<div id="div_bg_title">
+			<img src="img/close.gif" onclick='show2HideDiv(2);return false;' style="width:20px;cursor: pointer;" title="关闭"/>
+		</div>
+	    <div id="div_show">
+	         <iframe name='div_iframe' id='div_iframe' src='' height="100%" width="100%" style='border:none;overflow-y: auto;'></iframe>
+	     </div>
+	</body>
+</html>

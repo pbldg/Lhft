@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>$title</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var queryAction = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.tipsetting!queryTipSettingDetail";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=platform.tipsetting";
+    var delAction = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.tipsetting!delTipSettingDetail";
+    var lastsel2;
+	jQuery(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		
+		jQuery( "input:button, button", "div" ).button();
+
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		jQuery.grid(
+				"gridTable",
+				queryAction,
+				jQuery("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:1000,
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'['+													
+							' {name:"TIPSETTING_DETAIL_ID",index:"TIPSETTING_DETAIL_ID",label:"TIPSETTING_DETAIL_ID",hidden:true,editable:true}' +																											
+							',{name:"TIPSETTING_ID",index:"TIPSETTING_ID",label:"TIPSETTING_ID",hidden:true,editable:true}' +																											
+							',{name:"ELEMENTNAME",index:"ELEMENTNAME",label:"表单元素名称",editable:true,editoptions: { readonly: "readonly" }}' +																											
+							',{name:"ELEMENTDESC",index:"ELEMENTDESC",label:"表单元素描述",editable:true}' +																											
+							',{name:"TIPCONTENT",index:"TIPCONTENT",label:"提示内容",editable: true,edittype:"textarea"}' +																											
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    		if(rowid && rowid!==lastsel2){
+			    			if($("#"+lastsel2+"_ELEMENTNAME").val()!=""
+			    					&& $("#"+lastsel2+"_TIPCONTENT").val()!=""){
+			    				jQuery("#gridTable").jqGrid('saveRow',lastsel2);
+			    			}
+			    			
+				    		jQuery('#gridTable').restoreRow(lastsel2);
+				    		jQuery('#gridTable').jqGrid('editRow',rowid,true,function(e){
+				    			if($("#"+rowid+"_ELEMENTNAME").val()==""){
+				    				$("#"+rowid+"_ELEMENTNAME").removeAttr("readonly");
+				    			}
+				    			lastsel2=rowid;
+				    	        $("textarea",e.target).focus();
+				    	        return;
+				    	    });
+			    		}
+			    	},
+			    	editurl:"HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.tipsetting!saveTipSettingDetail",
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    	},
+			    	loadComplete:function(){
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    		resizeGrid('gridTable','queryDiv','contentDiv');
+			        	resetPage("gridPager");
+			        }
+				});
+		//resize绑定
+		jQuery(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');});	
+		//判断分页设置
+		checkPager("gridTable");
+		jQuery( "#buttonset" ).buttonset();
+		
+		//查询按钮
+		jQuery("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		//查询按钮
+		jQuery("#searchBtn2").click(function(){
+			loadFormElement();
+		});
+		
+		//新增按钮
+		jQuery("#addBtn").click(function(){
+			addRow();
+		});
+		
+		//修改按钮
+		jQuery("#updateBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = jQuery("#gridTable").jqGrid("getRowData", selectedId);  
+	        var url = gotoAction;						
+			url = url + "&TIPSETTING_ID="+rowData.TIPSETTING_ID;						
+	        popSaveInfo(url,"修改信息",globalPopWidth,globalPopHeightTinny);
+	        
+		});
+		
+		//查看按钮
+		jQuery("#readBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+			var rowData = jQuery("#gridTable").jqGrid("getRowData", selectedId); 
+	        var url = gotoAction;						
+			url = url + "&TIPSETTING_ID="+rowData.TIPSETTING_ID;						
+			popReadInfo(url,"查看信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//删除按钮
+		jQuery("#delBtn").click(function(e){
+			jQuery('#gridTable').restoreRow(lastsel2);
+			lastsel2 = "";
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOneOrMore(selectedId))return;
+			deleteInfo(e,selectedId);
+		});
+		
+		//删除操作
+		function deleteInfo(e,rowid){
+			var rows = rowid.split(",");
+			var ids = "";
+			var names = "";
+			jQuery.each(rows, function() {
+				var rowData = jQuery("#gridTable").jqGrid("getRowData", this); 
+				var key = "";
+				key = rowData.TIPSETTING_ID;								
+				ids = ids + key + ",";
+				names = names + rowData.ELEMENTNAME+ ",";
+			});
+			jQuery.uiconfirm("确定要删除吗？", "确认提示",
+		      function() {												
+				var url = delAction + "&TIPSETTING_ID="+ids+"&ELEMENTNAME="+names;		
+				commonDelete(url);
+		      },
+		      function() {
+		        //取消删除
+		      });
+		}
+		
+	});
+	//加载表单元素
+	function loadFormElement(){
+		var rowCount = $("#gridTable").getGridParam("reccount");
+		if(rowCount!=0){
+			$.uiconfirm("已经存在数据，该操作将会删除原有数据,是否确认操作?","确认提示",function(){
+				doLoad();
+			},function(){
+				
+			});
+		}else{
+			doLoad();
+		}
+	}
+	
+	function doLoad(){
+		lastsel2 = "";
+		$('#gridTable').jqGrid('clearGridData');
+		var formurl = $("#URL").val();
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.tipsetting!loadFormElement&URL="+formurl;
+		$.hkajax(url,"",{
+			success:function(data){
+				$.each(data.Rows,function(i,item){
+					var dataRow = {
+							TIPSETTING_DETAIL_ID: "",
+							TIPSETTING_ID: $("#TIPSETTING_ID").val(),
+							ELEMENTNAME: item.KEY,
+							ELEMENTDESC: item.VALUE,
+							TIPCONTENT: ""
+				        };   
+					 $("#gridTable").jqGrid("addRowData", i+1, dataRow, "last");     
+					 
+				});
+			}
+		});
+	}
+	
+	function addRow(){
+		var rowCount = $("#gridTable").getGridParam("reccount");
+		var dataRow = {
+				TIPSETTING_DETAIL_ID: "",
+				TIPSETTING_ID: $("#TIPSETTING_ID").val(),
+				ELEMENTNAME: "",
+				ELEMENTDESC: "",
+				TIPCONTENT: ""
+	        };  
+		$("#gridTable").jqGrid("addRowData", rowCount+1, dataRow, "last");     
+	}
+	
+
+    </script>
+</head>
+<body class="demo-single">
+    <div class="ui-layout-center">
+	    <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+				<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">		
+						网页地址：<input type="text" id="URL" name="URL" value="#{URL}" title="#{URL}" readonly="readonly"/>									
+						表单名称：<input type="text" id="FORMNAME" name="FORMNAME" value="#{TIPFORMNAME}" readonly="readonly"/>		
+						<input type="text" style="display: none;" id="TIPSETTING_ID" name="TIPSETTING_ID" value="#{TIPSETTING_ID}">								
+						<button id="searchBtn" type="button" style="display: none;"><span class="ui-icon ui-icon-search" style="float: left;"></span>加载表单元素</button>
+						<button id="searchBtn2" type="button" style="width: 130px;"><span class="ui-icon ui-icon-search" style="float: left;"></span>加载表单元素</button>
+					</form>
+				</div>
+			</fieldset>
+		</div>
+		<script type="text/javascript">
+			createSelectCondition("","","表单信息");
+		</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+	         <div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+				<span id="buttonset">
+					<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+					<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+				</span>
+	        </div>
+		</div>
+    </div>
+</body>
+</html>

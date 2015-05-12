@@ -1,0 +1,59 @@
+<html>
+	<head>
+		<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script>
+			var g_js_num=1;
+		</script>
+		<SCRIPT language="javascript" src="../js/boot.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+		<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+		<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script>
+		<script type="text/javascript">
+		$(document).ready(function () {
+			//主题切换
+			addThemeSwitcher('head',{ top: '0px', right: '0px' });
+			$("#id_tab_1").styleTable2();
+		});
+		</script>
+	</head>
+	<body onbeforeunload="parent.saveFormData();" leftmargin="0" topmargin="2" marginwidth="0" marginheight="0" style="overflow: auto;">
+		<div class="tab" >
+			<a href='#1' id='id_a_tab_1' onclick='return false;' class="on">流程信息</a>
+			<div class="tabspace">&nbsp;</div>
+		</div>
+		<div class="tabbody">
+			<table width="100%" border='1' id='id_tab_1' >
+				<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="2"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+				</tr>
+				<tr>
+					<td align='right' noWrap >
+						流程版本：
+					</td>
+					<td >
+						<input id='id_flow_version' readonly type='text' value='0' size='25' onchange="changeFlowInfo(this.value,'flowVersion')"/>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' noWrap >
+						流程标识：
+					</td>
+					<td >
+						<input id='id_flow_id' readonly type='text' value='' size='25' onchange="changeFlowInfo(this.value,'flowId')"/>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' >
+						流程名称：
+					</td>
+					<td >
+						<textarea rows="10" cols="26" id='id_flow_name' onchange="changeFlowInfo(this.value,'flowName')"></textarea>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

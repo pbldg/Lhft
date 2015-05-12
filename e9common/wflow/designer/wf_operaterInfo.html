@@ -1,0 +1,122 @@
+<html>
+	<head>
+		<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script>
+			var g_js_num=4;
+		</script>
+		<SCRIPT language="javascript" src="../js/boot.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+		<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+		<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+		<script type="text/javascript" src="/e9common/js/uiwindow.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script>
+		<script>
+			
+			$(function(){
+				//主题切换
+				addThemeSwitcher('head',{ top: '0px', right: '0px' });
+				//按钮样式
+				$( "input:button" ).button();
+				//表格样式
+				$("#id_tab_1").styleTable2();
+				$("#id_tab_2").styleTable2();
+			});
+		</script>
+	</head>
+	<body onbeforeunload="parent.saveFormData();" leftmargin="0" topmargin="2" marginwidth="0" marginheight="0" style="overflow: auto;">
+		<div class="tab" >
+			<a href='#1' id='id_a_tab_1' onclick='showTab(1);return false;' class="on">基本信息</a>
+			<a href='#1' id='id_a_tab_2' onclick='showTab(2);return false;'>结果线属性</a>
+			<div class="tabspace">&nbsp;</div>
+		</div>
+		<div class="tabbody">
+			<table width="100%" border='1' id='id_tab_1'>
+				<tr>
+					<td align='right' bgcolor="#F6F5EE">
+						对象ID：
+					</td>
+					<td>
+						<span id='id_svg_object' title='' style='cursor:pointer;'></span>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' bgcolor="#F6F5EE">
+						排序号：
+					</td>
+					<td>
+						<input id='id_list_no' type='text' value='0' size='25' onchange="changeListNo()"/>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' bgcolor="#F6F5EE">
+						结果名称：
+					</td>
+					<td>
+						<input id='id_name' type='text' value='' size='25' onchange="changeName()"/>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' noWrap bgcolor="#F6F5EE">
+						是否隐藏：
+					</td>
+					<td>
+						<input type='checkbox'  id='id_isHide' value='0' onclick='this.value=(this.value=="0"?"1":"0");changeHide();'/>
+					</td>
+				</tr>
+				<tr title='配置js函数，返回false时，隐藏该操作结果！'>
+					<td align='right' bgcolor="#F6F5EE">
+						JS函数：<br/>
+						(控制隐藏)
+					</td>
+					<td>
+						<input id='id_js_func' type='text' value='' size='25' onchange="changeJsFunc()"/>
+					</td>
+				</tr>
+				<tr title='中断时，将取消当前所有的待办事务！'>
+					<td align='right' noWrap bgcolor="#F6F5EE">
+						是否中断：
+					</td>
+					<td>
+						<input type='checkbox'  id='id_isBreak' value='0' onclick='this.value=(this.value=="0"?"1":"0");changeBreak();'/>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' noWrap bgcolor="#F6F5EE">
+						意见必输：
+					</td>
+					<td>
+						<input type='checkbox'  id='id_opinion' value='0' onclick='this.value=(this.value=="0"?"1":"0");changeOpinion();'/>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" align="center" height='30'>
+						<input type="button" onclick='delOperaterObj();return false;' value='删除'/>
+						<input id='id_break_activity' style="display: none;" type="button" onclick='breakActivity();return false;' value='断开环节连接'/>
+					</td>
+				</tr>
+			</table>
+			<table width="100%" border='1' id='id_tab_2' style='display:none;'>
+				<tr align="center">
+					<td colspan="3" bgcolor="#F6F5EE" >
+						结果线属性 
+					</td>
+				</tr>
+				<tr align="center">
+					<td bgcolor="#F6F5EE">参数名</td>
+					<td bgcolor="#F6F5EE">参数值</td>
+				</tr>
+			</table>
+			<br/>
+			<textarea id='id_jsondata' style='width:300;height:200;display:none;' readonly></textarea>
+			<br/>			
+			<table width="100%" border='1' id='id_tab_3' style='display:none;'>
+				<tr align="center">
+					<td >
+						<input type='button'  onclick='setParam();alert("保存成功！");return false;' value='保存'/>
+					</td>
+				</tr>				
+			</table>
+		</div>
+	</body>
+</html>

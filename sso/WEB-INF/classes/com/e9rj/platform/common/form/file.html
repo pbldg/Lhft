@@ -1,0 +1,181 @@
+		<!-- 文件上传 -->
+		<script type="text/javascript" src="/e9common/swfupload/swfupload/swfupload.js"></script>
+		<script type="text/javascript" src="/e9common/swfupload/js/swfupload.queue.js"></script>
+		<script type="text/javascript" src="/e9common/swfupload/js/fileprogress.js"></script>
+		<script type="text/javascript" src="/e9common/swfupload/js/handlers.js"></script>
+		<!-- 文件上传结束 -->
+		<!-- ztree相关 -->
+		<link rel="stylesheet" href="/e9common/jquery/ztree3.5/css/zTreeStyle/zTreeStyle.css" type="text/css" />
+		<script type="text/javascript" src="/e9common/jquery/ztree3.5/js/jquery.ztree.all-3.5.min.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/ztree3.5/js/jquery.ztree.exhide-3.5.min.js"></script>
+		<!-- ztree相关结束 -->
+<script type="text/javascript">
+//文件上传相关变量
+	var filesetting = {
+		edit: {
+			enable: true,
+			showRenameBtn: false,
+			showIcon: false,
+			showLine: false
+		},
+		data: {
+			simpleData: {
+				enable: true
+			}
+		},
+		callback: {
+			beforeRemove: zTreeBeforeRemove,
+			onDblClick: zTreeOnClick
+		}
+	};
+	var fileNodes =[];
+	var mainfileNodes =[];
+	var fileNodes1 =[];
+	var fileNodes2 =[];
+	var fileNodes3 =[];
+	var fileNodes4 =[];
+	var fileNodes5 =[];
+	var fileNodes6 =[];
+	var fileNodes7 =[];
+	var fileNodes8 =[];
+//文件上传相关变量 end
+function zTreeOnClick(event, treeId, treeNode) {
+	var attachId = treeNode.attachId;
+	var attachName = treeNode.name;
+	
+	if(treeNode.attachId){
+		
+    	if(attachName.indexOf(".jpg")>0
+    			||attachName.indexOf(".jpeg")>0
+    			||attachName.indexOf(".gif")>0
+    			||attachName.indexOf(".png")>0){
+    		//图片直接打开
+    		window.open("HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.file!download&ATTACH_ID="+attachId);
+    	}else{
+    		var iframe;
+        	if($("#filesIframe").length == 0){
+        		var $iframe = "<iframe id='filesIframe' name='filesIframe' style='display:none;'></iframe>";
+        		$("body").append($iframe);
+        	}
+        	iframe = $("#filesIframe")[0];
+        	iframe.src = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.file!download&ATTACH_ID="+attachId;
+    	}
+		//location.href="HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.file!download&ATTACH_ID="+attachId;
+	}
+	
+	/*
+	//加载图片
+	$.ajax({  
+        async : true,  
+        cache:false,  
+        type: 'POST',  
+        dataType : "json",  
+        url: "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.file!previewPic&ATTACH_ID="+attachId,//请求的action路径  
+        error: function () {//请求失败处理函数  
+            alert('请求失败');  
+        },  
+        success:function(data){ //请求成功后处理函数。    
+        	$("#img11").attr("src", "data:image/jpg;base64," + data.code);
+        }
+    });  
+	*/
+};
+//删除前事件
+function zTreeBeforeRemove(treeId, treeNode) {
+	var treeObj = $.fn.zTree.getZTreeObj(treeId);
+	treeObj.hideNode(treeNode);
+	//只能上传一个附件时，删除后，要恢复上传功能
+	if(treeNode.onlyOne && treeObj.swf){
+		treeObj.swf.setButtonDisabled(false);
+	}
+	return false;
+}
+//加载附件
+function getAttachfile(tableName,recId,attachType,callback){
+	if(recId=="")return;
+	//加载附件树树
+	$.ajax({  
+        async : false,  
+        cache:false,  
+        type: 'POST',  
+        dataType : "json",  
+        url: "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.file!queryAttachByRecId&TABLENAME="+tableName+"&REC_ID="+recId+"&ATTACHTYPE="+attachType,//请求的action路径  
+        error: function () {//请求失败处理函数  
+            alert('请求失败');  
+        },  
+        success:function(data){ //请求成功后处理函数。    
+        	if(callback){
+				callback(data);
+				interceptionFileName();
+				return;
+			}
+        }
+    });  
+	
+	
+}
+//设置附件信息
+function setAttachFile(treeId,tmpNameId,trueNameId){
+	var fTree = $.fn.zTree.getZTreeObj(treeId);
+	if(fTree==null)return;
+	var nodes = fTree.getNodesByParam("level", "0",null);
+	var fileNames = "";
+	var trueNames = "";
+	$.each(nodes,function(i,item){
+		if(item.attachId){
+			if(item.isHidden){
+				fileNames += "," + item.id+"--olddel";
+			}else{
+				fileNames += "," + item.id+"--old";
+			}
+		}else{
+			if(item.isHidden){
+				fileNames += "," + item.id+"--newdel";
+			}else{
+				fileNames += "," + item.id+"--new";
+			}
+		}
+		
+		
+		trueNames += "," + item.name;
+	});
+	if(fileNames!=""){
+		$("#"+tmpNameId).val(fileNames.substring(1));
+	}
+	if(trueNames!=""){
+		$("#"+trueNameId).val(trueNames.substring(1));
+	}
+}
+
+//判断共有几个附件
+function getEnableNodes(treeId){
+	var fTree = $.fn.zTree.getZTreeObj(treeId);
+	if(fTree==null) 0;
+	var nodes = fTree.getNodesByParam("level", "0",null);
+	var num = 0;
+	$.each(nodes,function(i,item){
+		if(!item.isHidden){
+			num++;
+		}
+	});
+	return num;
+}
+
+
+//文件名过长截取N位末尾用...表示
+function interceptionFileName(n){
+	if(!n) n=25;
+	$(".ztree li").find("a").each(function(){
+		if($(this).text().length>(parseInt(n)+3)){
+			$(this).text($(this).text().substring(0,n)+"...");
+		}
+	});
+}
+//批量处理附件信息
+function handleFile(fileIds){
+	var files = fileIds.split(",");
+	for(var i=0;i<files.length;i++){
+		setAttachFile(files[i]+"_fileTree1",files[i]+"S",files[i]+"S_TRUENAME");
+	}
+}
+</script>

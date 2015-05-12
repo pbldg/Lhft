@@ -1,0 +1,117 @@
+<html>
+	<head>
+		<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<script type="text/javascript">
+		var g_js_num=5;
+		</script>
+		<SCRIPT language="javascript" src="../js/boot.js"></SCRIPT>
+		<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+		<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+		<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+		<script type="text/javascript" src="/e9common/js/uiwindow.js"></script>
+		<script>
+			
+			$(function(){
+				//按钮样式
+				$( "input:button" ).button();
+				//按钮
+				$( "#buttonset" ).buttonset();
+				$( "#buttonset1" ).buttonset();
+				$( "#buttonset2" ).buttonset();
+				//表格样式
+				$("#id_tab_1").styleTable2();
+				$("#id_tab_2").styleTable2();
+				$("#id_tab_3").styleTable2();
+			});
+		</script>
+	</head>
+	<body leftmargin="0" topmargin="2" marginwidth="0" marginheight="0" style="overflow: auto;">
+		<div class="tab" >	
+			<a href='#1' id='id_a_tab_1' onclick='showTab(1);return false;' class="on">流程属性</a>
+			<a href='#1' id='id_a_tab_2' onclick='showTab(2);return false;' >活动属性</a>
+			<a href='#1' id='id_a_tab_3' onclick='showTab(3);return false;' >结果线属性</a>
+			<div class="tabspace">&nbsp;</div>
+		</div>
+		<div class="tabbody">
+			<table width="100%" border='1' id='id_tab_1'>
+			<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+				</tr>
+				<tr>
+					<td colspan="4" align="center" height="30" bgcolor="#F6F5EE">
+						流程属性
+					</td>
+				</tr>
+				<tr>
+					<td colspan="4">
+						<span id="buttonset">		
+							<input type='button' value='新增' onclick="$('#id_tab_1').append(wf_param_tr);$('#id_tab_1').styleTable2();"/>
+							<input type='button' value='删除' onclick="delTr('wf_checkbox')"/>
+							<input type='button' value='保存' onclick="setParam('1');$.uialert('保存成功！');"/>
+						</span>
+					</td>
+				</tr>
+				<tr align="center"  id='id_tr_wf_checkbox'>
+					<td width="20" bgcolor="#F6F5EE">
+						<input type='checkbox' onclick="selectAllCheckBox('wf_checkbox');"  id='wf_checkbox'/>
+					</td>
+					<td bgcolor="#F6F5EE">名称</td>
+					<td bgcolor="#F6F5EE">值</td>
+					<td bgcolor="#F6F5EE">说明</td>
+				</tr>
+			</table>
+			<table width="100%" border='1' id='id_tab_2' style="display: none;">
+				<!-- 为了样式协调必需要 -->
+				<tr style="height: 1px;">
+					<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="3"><img src="/e9common/images/empty.gif" style="height: 1px;"/></td>
+				</tr>
+				<tr>
+					<td colspan="3" align="center" height="30" >
+						活动属性
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						<span id="buttonset1">
+							<input type='button' value='新增' onclick="$('#id_tab_2').append(wf_param_o_tr);$('#id_tab_2').styleTable2();"/>
+							<input type='button' value='删除' onclick="delTr('wf_o_checkbox')"/>
+							<input type='button' value='保存' onclick="setParam('2');$.uialert('保存成功！');"/>
+						</span>
+					</td>
+				</tr>
+				<tr align="center" id='id_tr_wf_o_checkbox'>
+					<td width="20"  >
+						<input type='checkbox' onclick="selectAllCheckBox('wf_o_checkbox');"  id='wf_o_checkbox'>
+					</td>
+					<td>名称</td>
+					<td>说明</td>
+				</tr>
+			</table>
+			<table width="100%" border='1' id='id_tab_3' style="display: none;">
+				<tr>
+					<td colspan="3" align="center" height="30" bgcolor="#F6F5EE">
+						结果线属性
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">
+						<span id="buttonset2">
+							<input type='button' value='新增' onclick="$('#id_tab_3').append(wf_param_n_tr);$('#id_tab_3').styleTable2();"/>
+							<input type='button' value='删除' onclick="delTr('wf_n_checkbox')"/>
+							<input type='button' value='保存' onclick="setParam('3');$.uialert('保存成功！');"/>
+						</span>
+					</td>
+				</tr>
+				<tr align="center"  id='id_tr_wf_n_checkbox'>
+					<td width="20" bgcolor="#F6F5EE">
+						<input type='checkbox' onclick="selectAllCheckBox('wf_n_checkbox');" id='wf_n_checkbox'/>
+					</td>
+					<td bgcolor="#F6F5EE">名称</td>
+					<td bgcolor="#F6F5EE">说明</td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

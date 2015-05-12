@@ -1,0 +1,355 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.core-3.2.js"></script>
+	<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+	<script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    
+  //树设置
+    var setting = {
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+    var zNodes,popNodes,tmpNodes;
+	
+	$(document).ready(function () {
+		author(auth);
+		//加载树数据
+		loadTreeData();
+		//表格样式		
+		$("#infoTable").styleTable();
+	    	
+		//把按钮拷到主页面
+		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
+		//初始化按钮事件
+		initBtn();
+		//初始化树
+		var mTree = $.fn.zTree.init($("#menuTree"), setting, zNodes);
+		mTree.expandAll(true);
+		var pTree = $.fn.zTree.init($("#popTree"), setting, popNodes);
+	    pTree.expandAll(true);
+		//$("#expandBtn").bind("click", {type:"expandAll"}, expandNode);
+		//$("#collapseBtn").bind("click", {type:"collapseAll"}, expandNode);
+		$("#saveBtn").bind("click", saveInfo);
+		//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitThisInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=sys.usercode");
+		//默认展开菜单
+		//$("#expandBtn").click();
+		$( "#saveBtnSet" ).buttonset();
+		
+		//类别默认值
+		$("#CATEGORYNO").val($("#SCATEGORYNO").val());
+		$("#CATEGORY_NAME").val($("#SCATEGORYNO").find("option:selected").text());
+		
+		//resize绑定
+		$(window).bind('resize', function(){
+			var objHeight = getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#buttonDiv").height() - 40;
+			$("#contentDiv").height(objHeight);
+			$("#menuTree").height(objHeight);
+			$("#popTree").height(200);
+			$("#popTree").width($("#PARENT_NAME").width()-30);
+			$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height()-$("#contentTabs > .ui-tabs-nav").height()-20);
+		}).trigger('resize');	
+	});
+	//加载树数据
+	function loadTreeData(){
+		//加载树
+		var url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.usercode";
+		$.hkajax(
+		        url,//请求的action路径  
+		        "CATEGORYNO="+$("#SCATEGORYNO").val(),
+		        {
+			        success:function(data){ //请求成功后处理函数。
+			        	zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+			        }  
+		        }); 
+		//加载弹出树
+		var url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.usercode&TREETYPE=pop";
+		$.hkajax(
+		        url,//请求的action路径  
+		        "CATEGORYNO="+$("#SCATEGORYNO").val(),
+		        {
+			        success:function(data){ //请求成功后处理函数。
+			        	 popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+				         tmpNodes = data;
+			        }  
+		        }); 
+	}
+	//提交表单
+	function submitThisInfoForm(formid,url){
+		$('#'+formid).submit(function(){
+	        jQuery.ajax({
+	            url: url,   // 提交的页面
+	            data: $('#'+formid).serialize(), // 从表单中获取数据
+	            type: "POST",                   // 设置请求类型为"POST"，默认为"GET"
+	            dataType:"json",
+	            beforeSend: function()          // 设置表单提交前方法
+	            {
+	            	//验证
+	                return validateForm;
+	            },
+	            error: function(request) {      // 设置表单提交出错
+	                $.uialert("表单提交出错，请稍候再试");
+	            },
+	            success: function(data) {
+	                var result = data.result;
+	                if(result.indexOf("失败")>0){
+	                	$.uialert(result);
+	                	return;
+	                }else{
+	                	//重新加载树
+	                	loadTreeData();
+	                	$.uimessage(result);
+        	        	var zTree = $.fn.zTree.init($("#menuTree"), setting, zNodes);
+        	        	zTree.refresh();
+	                	//展开原来的节点
+	                	var pNode = zTree.getNodeByParam("id",$("#PARENTNO").val());
+	                	zTree.expandNode(pNode, true, null, null);
+	                	$("#OLDCNO").val($("#CNO").val());
+	                	if($("#CMD").val()=="A"){
+	                		toAdd();
+	                	}
+	                }
+	                
+	            }
+	        });
+	        return false;
+	    });
+	}
+	//显示弹出树
+	function showMenu() {
+		tmpNodes = popNodes;
+		$.fn.zTree.init($("#popTree"), setting, tmpNodes);
+		
+		var popTree = $.fn.zTree.getZTreeObj("popTree");
+		popTree.expandAll(true);
+		//过滤掉当前节点以子节点
+		var currId = $("#CNO").val();
+		var pNode = popTree.getNodeByParam("id",currId);
+		//zTree.removeChildNodes(pNode);
+		popTree.removeNode(pNode);
+		
+		var cityObj = $("#PARENT_NAME");
+		var cityOffset = $("#PARENT_NAME").offset();
+		$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() - $("#queryDiv").outerHeight() + "px"}).slideDown("fast");
+
+		$("body").bind("mousedown", onBodyDown);
+	}
+	function hideMenu() {
+		$("#menuContent").fadeOut("fast");
+		$("body").unbind("mousedown", onBodyDown);
+	}
+	function onBodyDown(event) {
+		if (!(event.target.id == "menuBtn" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+			hideMenu();
+		}
+	}
+	//设置父节点信息
+	function getParentInfo(id,name){
+		$("#PARENT_NAME").val(name);
+		$("#PARENTNO").val(id);
+	}
+	//保存
+	function saveInfo(){
+    	$('#infoForm').submit();
+    }
+	//取单个菜单信息
+	function getCodeObject(cno,categoryNo){
+		$.hkajax(
+				gotoAction,//请求的action路径  
+		        "CNO="+cno+"&CATEGORYNO="+categoryNo,
+		        {
+			        success:function(data){ //请求成功后处理函数。
+			        	$("#CNO").val(data.CNO);
+			        	$("#OLDCNO").val(data.CNO);
+			        	$("#CVALUE").val(data.CVALUE);
+			        	$("#PARENT_NAME").val((data.PARENT_NAME==null)?($("#CATEGORY_NAME").val()):data.PARENT_NAME);
+			        	$("#PARENTNO").val(data.PARENTNO);
+			        	$("#ORDIDX").val(data.ORDIDX);
+			        	$("input[name='ENABLED'][value='"+data.ENABLED+"']").attr("checked",true);
+			        	$("#EXTITEM1").val(data.EXTITEM1);
+			        	$("#EXTITEM2").val(data.EXTITEM2);
+			        	$("#EXTITEM3").val(data.EXTITEM3);
+			        	$("#ORG_ID").val(data.ORG_ID);
+			        	$("#CMD").val("U");
+			        }  
+		        });
+	}
+	//跳转到添加
+	function toAdd(){
+		$("#infoForm")[0].reset();
+		//类别默认值
+		$("#CATEGORYNO").val($("#SCATEGORYNO").val());
+		$("#CATEGORY_NAME").val($("#SCATEGORYNO").find("option:selected").text());
+		$("#CMD").val("A");
+		
+		//设置默认父编号为当前选中节点
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+		var id;
+		if(nodes==null || nodes.length==0){
+			id = $("#CATEGORYNO").val();
+		}else{
+			id = nodes[0].id;
+		}
+		var zNode = zTree.getNodeByParam("id",id);
+		$("#PARENTNO").val(zNode.id);
+		$("#PARENT_NAME").val(zNode.name);
+	}
+	//删除
+	function delCode(){
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+		var id = nodes[0].id;
+		var url = delAction;
+		
+		$.hkajax(
+				url,//请求的action路径  
+		        "CNO="+id+"&CATEGORYNO="+$("#SCATEGORYNO").val(),
+		        {
+			        success:function(data){ //请求成功后处理函数。
+			        	var result = data.result;
+			            $.uimessage(result);
+			            if(result.indexOf("成功")>0){
+			            	//删除弹出树节点
+			            	var popTree = $.fn.zTree.getZTreeObj("popTree");
+			        		var popNode = popTree.getNodeByParam("id",id);
+			        		popTree.removeNode(popNode);
+			        		popNodes = remove(popNodes,"id",id);
+			        		//删除普通树节点
+			        		var zNode = zTree.getNodeByParam("id",id);
+			        		zTree.removeNode(zNode);
+			        		//重置 表单
+			        		$("#infoForm")[0].reset();
+			        		//类别默认值
+			        		$("#CATEGORYNO").val($("#SCATEGORYNO").val());
+			        		$("#CATEGORY_NAME").val($("#SCATEGORYNO").find("option:selected").text());
+			            }
+			        }  
+		        });
+		
+		
+	}
+    </script>
+</head>
+<body >
+	<table id="contentDiv" width="100%">
+		<tr>
+			<td valign="top" width="300"><ul id="menuTree" class="ztree" style="border:1px solid #336699;"></ul></td>
+			<td align="left" valign="top" style="margin-left: 5px;">
+				<form method="post" name="infoForm" id="infoForm" action="/">
+					<input type="text" style="display: none;" name="CMD" id="CMD" value="A">
+					<div id="infoTableDiv" style="overflow: auto;">
+						<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable" class="full" >
+							<!-- 为了样式协调必需要 -->
+							<tr style="height: 1px;">
+								<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+							</tr>
+							<!-- ***end*** -->
+							<tr>
+								<td height="25" width="150" align="right" >分类号：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="CATEGORY_NAME" id="CATEGORY_NAME" readonly="readonly">
+								    <input type="text" style="width:90%;display: none;" name="CATEGORYNO" id="CATEGORYNO" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >上级代码：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="PARENT_NAME" id="PARENT_NAME" onclick="showMenu();">
+								    <input type="text" style="width:90%;display: none;" name="PARENTNO" id="PARENTNO" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >代码：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="CNO" id="CNO" >
+								    <input type="text" style="width:90%;display: none;" name="OLDCNO" id="OLDCNO" >
+								    <input type="text" style="width:90%;display: none;" name="ORG_ID" id="ORG_ID" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >代码值：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="CVALUE" id="CVALUE" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >排序号：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="ORDIDX" id="ORDIDX" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >启用：</td>
+								<td align="left" >
+								    <input type="radio" id="radio1" name="ENABLED" value="1" checked="checked"/>启用
+									<input type="radio" id="radio2" name="ENABLED" value="0"/>禁用
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >扩展项1：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="EXTITEM1" id="EXTITEM1" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >扩展项2：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="EXTITEM2" id="EXTITEM2" >
+								</td>
+							</tr>
+							<tr>
+								<td height="25" width="150" align="right" >扩展项3：</td>
+								<td align="left" >
+								    <input type="text" style="width:90%" name="EXTITEM3" id="EXTITEM3" >
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" align="center">
+									<div id="saveBtnSet">
+										<button id="saveBtn" type="button"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>
+									</div>
+								</td>
+							</tr>
+				        </table>
+			        </div>
+				</form>
+			</td>
+		</tr>
+	</table>
+    <span id="buttonset">
+		<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+		<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>		
+	</span>
+	<div id="menuContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popTree" class="ztree" style="margin-top:0; width:160px;"></ul>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="SYSCODE_BEAN.getCmd()"/>
+	<var name="CNO" required="true" validate="required,maxSize[50]"/><!-- 代码 -->
+	<var name="CATEGORYNO" required="true" validate="required,maxSize[50]"/><!-- 分类号 -->
+	<var name="PARENTNO" value="SYSCODE_BEAN.get('PARENTNO')"/><!-- 上级代码 -->
+	<var name="ORDIDX" value="SYSCODE_BEAN.get('ORDIDX')" required="true" validate="required,maxSize[4],custom[number]"/><!-- 排序号 -->
+	<var name="CVALUE" value="SYSCODE_BEAN.get('CVALUE')" required="true" validate="required,maxSize[50]"/><!-- 代码值 -->
+	<var name="ENABLED" value="SYSCODE_BEAN.get('ENABLED')"/><!-- 是否启用 -->
+	<var name="EXTITEM1" value="SYSCODE_BEAN.get('EXTITEM1')" required="false" validate="maxSize[50]"/><!-- 扩展项1 -->
+	<var name="EXTITEM2" value="SYSCODE_BEAN.get('EXTITEM2')" required="false" validate="maxSize[50]"/><!-- 扩展项2 -->
+	<var name="EXTITEM3" value="SYSCODE_BEAN.get('EXTITEM3')" required="false" validate="maxSize[50]"/><!-- 扩展项3 -->
+	<var name="ORG_ID" value="SYSCODE_BEAN.get('ORG_ID')" required="false" validate="maxSize[50]"/><!-- ORGID -->
+<!--Form Setting End-->

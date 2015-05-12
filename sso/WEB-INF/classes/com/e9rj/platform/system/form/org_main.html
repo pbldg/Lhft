@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.org";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.org";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.org";
+
+  //树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false
+    		},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+    var zNodes,zTree;
+	$(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//加载树数据
+		loadTreeData();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		var schoolid = $("#OLD_SCHOOL_ID").val();
+		if(schoolid==""){
+			schoolid="NONE";
+		}
+		$.grid(
+				"gridTable",
+				queryAction+"&INIT=TRUE",
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+	        			#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+	        			tabLogo, 
+	        			'[{name:"ORGNAME",index:"ORGNAME",label:"名称"},' +
+	        			'{name:"ORGCODE",index:"ORGCODE",label:"组织编号"},' +
+	        			'{name:"PARENTORGCODE",index:"PARENTORGCODE",label:"上级机构"},' +
+	        			'{name:"CHARGER_CODE",index:"CHARGER_CODE",label:"主要负责人",align:"center",width:"60px"},' +
+	        			'{name:"ENABLED",index:"ENABLED",label:"是否激活",align:"center",width:"60px"},' +
+	        			'{name:"CONTACT",index:"CONTACT",label:"联系人",align:"center",width:"60px"},' +
+	        			'{name:"ORGTYPE",index:"ORGTYPE",label:"类型",align:"center",width:"60px"}' +
+	        			']'
+	        			)},	
+		        	  
+			    	onSelectRow:function(rowid){},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    		
+			    		$("#rightDiv").css("width",$(window).width()-$("#leftDiv").width());
+						resizeGrid('gridTable','queryDiv','contentDiv')
+						
+						$("#orgTree").height($(window).height()-60);
+			    	}
+				});
+		//resize绑定
+		$(window).bind('resize', function(){
+			$("#rightDiv").css("width",$(window).width()-$("#leftDiv").width());
+			resizeGrid('gridTable','queryDiv','contentDiv');
+			
+			$("#orgTree").height($(window).height()-60);
+			});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		$( "#buttonset" ).buttonset();
+		$( "#treeBtn" ).buttonset();
+		//end****************************************
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			var node = zTree.getSelectedNodes()[0];
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   
+		});
+		
+		//新增按钮
+		$("#addBtn").click(function(){
+			var url = gotoAction + "&TMP="+new Date();
+			popSaveInfo(url,"新增组织机构信息",globalPopWidthLong,globalPopHeightLong);
+		});
+		
+		//修改按钮
+		$("#updateBtn").click(function(){
+			
+			
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+	        
+	        
+	        var url = gotoAction + "&ORGCODE="+rowData.ORGCODE+"&TMP="+new Date();
+	        popSaveInfo(url,"修改组织机构信息",globalPopWidthLong,globalPopHeightLong);
+	        
+		});
+		
+		//删除按钮
+		$("#delBtn").click(function(e){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(selectedId==""){
+				$.uialert("请选择数据!");
+				return;
+			}
+			deleteInfo(e,selectedId);
+		});
+		
+		//删除操作
+		function deleteInfo(e,rowid){
+			var rows = rowid.split(",");
+			var ids = "";
+			jQuery.each(rows, function() {
+				var rowData = $("#gridTable").jqGrid("getRowData", this);  
+				ids = ids + rowData.ORGCODE + ",";
+			});
+			$.uiconfirm("确定要删除吗？", "确认提示",
+		      function() {
+				var url = delAction + "&ORGCODE="+ids;
+				commonDelete(url,function(){
+					refreshTree();
+				});
+		      },
+		      function() {
+		        //取消删除
+		      });
+		}
+		
+		//关闭按钮
+		$("#closeBtn").click(function(){
+			closePop("org");
+		});
+		
+		//初始化树
+		zTree = $.fn.zTree.init($("#orgTree"), setting, zNodes);
+		//zTree.expandAll(true);
+		
+		//展开所有节点
+		$("#expandBtn").click(function(){
+			zTree.expandAll(true);
+		});
+		
+		//关闭所有节点
+		$("#collapseBtn").click(function(){
+			zTree.expandAll(false);
+		});
+	});
+	
+	//加载树数据
+	function loadTreeData(){
+		//加载树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.org&TREETYPE=common",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+	}
+	
+	function refreshTree(){
+		//重新加载树
+    	loadTreeData();
+    	var zTree = $.fn.zTree.init($("#orgTree"), setting, zNodes);
+    	zTree.refresh();
+    	//展开原来的节点
+    	//var pNode = zTree.getNodeByParam("id",$("#PARENTORGCODE").val());
+    	//if(pNode!=null && pNode!=""){
+    	//	zTree.expandNode(pNode, true, null, null);
+    	//}
+    	zTree.expandAll(true);
+	}
+	//点击树事件
+	function setOrgInfo(orgCode,contextCode,orgName){
+		$("#PARENTORGCODE").val(orgCode);
+		$("#CONTEXTCODE").val(contextCode);
+		$("#PORGNAME").html(orgName);
+		$("#searchBtn").click();
+	}
+	
+	
+    </script>
+    <style type="text/css">
+    ul.ztree {width:250px;overflow-y:auto;overflow-x:auto;margin-top:5px;margin-left: 2px;}
+    </style>
+
+</head>
+<body>
+    <div class="ui-layout-center">
+    	<div id="leftDiv" style="float: left;padding-top: 5px;">
+			<span id="treeBtn" style="margin-left: 2px;padding-bottom: 10px;">
+				<button id="expandBtn"><span class="ui-icon ui-icon-folder-open" style="float: left;"></span>展开</button>
+				<button id="collapseBtn"><span class="ui-icon ui-icon-folder-collapsed" style="float: left;"></span>折叠</button>
+			</span>
+    		<ul id="orgTree" class="ztree ui-widget-content ui-corner-all"></ul>
+    	</div>
+    	<div id="rightDiv" style="float: left;">
+    		<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+				<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+						<form id="searchform" onSubmit="return false" style="margin:0;">
+							<input type="radio" checked="checked" style="width:13px;"><span id="PORGNAME">未选择机构</span>
+							<input type="checkbox" id="CHILDFLAG" name="CHILDFLAG" style="width:13px;" value="1" checked="checked">包含子机构&nbsp;&nbsp;
+							名称：
+							<input type="text" id="ORGNAME" name="ORGNAME">
+							<input type="text" style="display: none;" id="PARENTORGCODE" name="PARENTORGCODE">
+							<input type="text" style="display: none;" id="CONTEXTCODE" name="CONTEXTCODE">
+							<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+						</form>
+					</div>
+				</fieldset>
+			</div>
+			<script type="text/javascript">
+					createSelectCondition();
+				</script>
+			<!-- tabLogo的值必须全局唯一 -->
+			<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+				<table id="gridTable" class="ui-pg-table"></table>  
+		        <div id="gridPager" style="height: 36px"></div>
+			</div>
+    	</div>
+    </div>
+    <div id="buttonDiv" style="position:absolute;bottom:10px;left:270px;">
+		<span id="buttonset">
+			<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="updateBtn" rightval="4"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>修改</button>
+			<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+		</span>
+    </div>
+</body>
+</html>

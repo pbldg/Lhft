@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/edittop.html"/>
+    
+    <script type="text/javascript">
+  	//树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false
+    		},
+    		edit: {
+				enable: true,
+				showRemoveBtn: false,
+				showRenameBtn: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+    var popNodes;
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//重置表单（防止IE缓存）
+    	//$("#infoForm")[0].reset();
+    	//加载树数据
+		loadTreeData();
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTable").styleTable();
+		//按钮样式
+		$( "input:button, a, button", "div" ).button();
+    	//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.function",function(data){
+			var currTabId = getCurrTabId();
+			window.top.$("#"+currTabId)[0].contentWindow.refreshTree(data.pId);
+		});
+		//按钮
+		$( "#buttonset" ).buttonset();
+		//初始化弹出树
+		$.fn.zTree.init($("#popTree"), setting, popNodes);
+    });
+  	//加载树数据
+	function loadTreeData(){
+		//加载弹出树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=platform.function&TREETYPE=pop",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+	}
+    function saveInfo(){
+    	$('#infoForm').submit();
+    }
+	//显示弹出树相关代码******start
+	function showMenu() {
+		$.fn.zTree.init($("#popTree"), setting, popNodes);
+		var popTree = $.fn.zTree.getZTreeObj("popTree");
+		
+		var parentObject = $("#MODULENAME");//弹出对象
+		var parentOffset = $("#MODULENAME").offset();//弹出对象位置
+		$("#menuContent").css({left:parentOffset.left + "px", top:parentOffset.top + parentObject.outerHeight() + "px"}).slideDown("fast");
+
+		$("body").bind("mousedown", onBodyDown);
+	}
+	function hideModule() {
+		$("#menuContent").fadeOut("fast");
+		$("body").unbind("mousedown", onBodyDown);
+	}
+	function onBodyDown(event) {
+		if (!(event.target.id == "menuBtn" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+			hideModule();
+		}
+	}
+	//弹出树相关代码*****end
+	//（弹出树的点击事件）设置父节点信息
+	function getModuleInfo(id,name){
+		$("#MODULENAME").val(name);
+		$("#MODULENO").val(id);
+	}
+	</script>
+	<style type="text/css">
+    	ul.ztree {width:316px;overflow-y:auto;overflow-x:auto;height: 200px;}
+    </style>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD" value="A">
+		<div id="infoTableDiv" style="overflow: auto;">
+		<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable" class="full" >
+			<!-- 为了样式协调必需要 -->
+			<tr style="height: 1px;">
+				<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+			</tr>
+			<!-- ***end*** -->
+			<tr>
+				<td height="33" width="150" align="right" >功能号：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="FUNCNO" id="FUNCNO" >
+				    <input type="text" style="width:90%;display: none;" name="OLDFUNCNO" id="OLDFUNCNO" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >功能名：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="FUNCNAME" id="FUNCNAME" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >所属模块组：</td>
+				<td align="left" >
+					<input type="text" style="width:90%" name="MODULENAME" id="MODULENAME" onclick="showMenu()" readonly="readonly">
+				    <input type="text" style="width:90%;display: none;" name="MODULENO" id="MODULENO" >
+				</td>
+			</tr>
+			<tr style="display: none;">
+				<td height="33" width="150" align="right" >排序号：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="ORDIDX" id="ORDIDX" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >允许授权：</td>
+				<td align="left" >
+				    <input type="radio" id="radio1" name="ALLOWAUTH" value="1" checked="checked"/>可授权
+					<input type="radio" id="radio2" name="ALLOWAUTH" value="0"/>不可授权			
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >操作限制：</td>
+				<td align="left" >
+				    <input type="radio" id="radio3" name="OPLIMIT" value="1" checked="checked"/>可操作
+					<input type="radio" id="radio4" name="OPLIMIT" value="0"/>不可操作			
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >是否启用：</td>
+				<td align="left" >
+				    <input type="radio" id="radio5" name="ENABLED" value="1" checked="checked"/>启用
+					<input type="radio" id="radio6" name="ENABLED" value="0"/>禁用
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="150" align="right" >备注：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="REMARK" id="REMARK" >
+				</td>
+			</tr>
+        </table>
+        </div>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			#{FORM_IS_READONLY=="true"?'':'<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>'}
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+	<div id="menuContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popTree" class="ztree" style="margin-top:0; width:160px;"></ul>
+	</div>	
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="CMD" value="FUNCTION_BEAN.getCmd()"/>
+<var name="OLDFUNCNO" value="FUNCTION_BEAN.get('FUNCNO')"/><!-- ID -->
+<var name="FUNCNO" value="FUNCTION_BEAN.get('FUNCNO')" required="true" validate="required,maxSize[50]"/><!-- 功能号 -->
+<var name="FUNCNAME" value="FUNCTION_BEAN.get('FUNCNAME')" required="true" validate="required,maxSize[50]"/><!-- 功能名 -->
+<var name="MODULENAME" value="FUNCTION_BEAN.get('MODULENAME')" required="true" validate="required"/><!-- 模块编号 -->
+<var name="MODULENO" value="FUNCTION_BEAN.get('MODULENO')"/><!-- 模块编号 -->
+<var name="ORDIDX" value="FUNCTION_BEAN.get('ORDIDX')"/><!-- 排序号 -->
+<var name="ALLOWAUTH" value="FUNCTION_BEAN.get('ALLOWAUTH')"/><!-- 允许授权 -->
+<var name="OPLIMIT" value="FUNCTION_BEAN.get('OPLIMIT')"/><!-- 操作限制 -->
+<var name="ENABLED" value="FUNCTION_BEAN.get('ENABLED')"/><!-- 是否启动 -->
+<var name="REMARK" value="FUNCTION_BEAN.get('REMARK')" required="false" validate="maxSize[50]"/><!-- 备注 -->
+<!--Form Setting End-->

@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+  <!-- Chang URLs to wherever Video.js files will be hosted -->
+  <script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+  <link href="http://localhost:8080/e9common/video-js/video-js.css" rel="stylesheet" type="text/css">
+  <!-- video.js must be in the <head> for older IEs to work. -->
+  <script src="http://localhost:8080/e9common/video-js/video.js"></script>
+  <script src="http://localhost:8080/e9common/players/mediaplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/pdfplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/picplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/player.js"></script>
+   <script>
+   var videoName = "/e9common/videotest/2.mp4";
+   var path = "/e9common/videotest/";
+   var nextMediaName = "";
+   var currentSection = "1";
+   var currentMediaName = "oceans-clip.mp4";
+   var currentPoster = "http://video-js.zencoder.com/oceans-clip.png";
+   var eInterval;
+   String.prototype.endsWith = function(suffix) {
+       return this.indexOf(suffix, this.length - suffix.length) !== -1;
+   };
+   /* var player = new player({
+	   id:"testid",
+	   type:"media",
+	   preload:"auto",
+	   width:600,
+	   height:300,
+	   fileurl:path,
+	   imageurl
+   }); */
+   function startPlay(mediaName){
+	   var player = new player({
+		   id:"testid",
+		   type:"media",
+		   preload:"auto",
+		   width:600,
+		   height:300,
+		   fileurl:path+mediaName,
+		   imageurl:currentPoster
+	   });
+   }
+    $(document).ready(function(){
+    	var myPlayer = document.getElementById("mediaPlayer");
+    	var m = _V_("mediaPlayer");    	
+    	$(myPlayer).attr("src", path + currentMediaName);
+		$(myPlayer).attr("poster",currentPoster);
+    	$("div[section]").click(function(){
+    		clearInterval(eInterval);
+    		//有练习的***
+    		if($(this).attr("exerciseTime") && $(this).attr("exerciseTime")!=""){
+    			var eTime = parseInt($(this).attr("exerciseTime"));
+    			eInterval = window.setInterval(function(){
+    				if(m.currentTime()>eTime){
+    					pause();
+    					clearInterval(eInterval);
+    					alert("做练习时间到:)");
+    				}
+    			},100);
+    		}
+    		//************end
+    		currentMediaName = path + $(this).attr("src");
+    		nextMediaName = path + findNextMediaName($(this).attr("section"));
+    		$(myPlayer).attr("src", currentMediaName);
+    		$(myPlayer).attr("poster",currentPoster);
+    		myPlayer.load();
+    		myPlayer.play();
+    		
+    	});
+    	_V_("mediaPlayer").ready(function(){
+    		this.on("ended", function(){
+    			$(myPlayer).attr("src", nextMediaName);
+        		myPlayer.load();
+        		myPlayer.play();
+    		});
+    		this.on("loadstart", function(){
+    			
+    			$.each($("div[section]"),function(i,item){
+    				var src = $(item).attr("src");
+    				if(myPlayer.src.endsWith(src)){
+    					$(item).removeClass("normalDiv");
+    					$(item).addClass("selectedDiv");
+    				}else{
+    					$(item).removeClass("selectedDiv");
+    					$(item).addClass("normalDiv");
+    				}
+    			});
+    		});
+    	});
+    	videojs.options.flash.swf = "/e9common/video-js/video-js.swf";
+    });
+    function findNextMediaName(currentSection){
+    	var nextSection = parseInt(currentSection)+1;
+    	return $("div[section='"+nextSection+"']").attr("src");
+    }
+   
+    function pause(){
+		var m = _V_("mediaPlayer");    	
+		m.pause();
+    }
+    function play(){
+    	var m = _V_("mediaPlayer");   
+    	m.play();
+    }
+    function clearDiv(){
+    	$("#mediaDiv").html("");
+    }
+  </script>
+  <style type="text/css">
+  	.selectedDiv{
+  		background: red;
+  	}
+  	.normalDiv{
+		cursor: pointer;
+  	}
+  </style>
+</head>
+<body>
+<div class="normalDiv" section="1" style="float: left;" mediatype="video" src="oceans-clip.mp4">第一节</div>
+<div class="normalDiv" section="2" style="float: left;" mediatype="video" src="2.mp4" exerciseTime="2">第二节*</div>
+<div class="normalDiv" section="3" style="float: left;" mediatype="pdf" src="3.mpg">第三节</div>
+<div class="normalDiv" section="4" style="float: left;" mediatype="pic">第四节</div>
+<div class="normalDiv" section="5" style="float: left;">第五节</div>
+<div id="mediaDiv" class="normalDiv" style="clear: both;">
+  <video id="mediaPlayer" class="video-js vjs-default-skin" controls preload="none" width="640" height="264"></video>
+</div>
+<div>
+	<input value="">
+	<input type="button" value="暂停" onclick="pause()">
+	<input type="button" value="播放" onclick="play()">
+	<input type="button" value="清空" onclick="clearDiv()">
+</div>
+</body>
+</html>

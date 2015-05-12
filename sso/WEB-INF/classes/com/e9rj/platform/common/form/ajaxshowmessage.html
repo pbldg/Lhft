@@ -1,0 +1,11 @@
+﻿<script language="javascript">
+	if("#{result}"=="0"){
+		//失败，重新编辑
+		alert("#{MESSAGE}");
+		history.go(-1);
+	}else{
+		if("#{MESSAGE}"!=""){
+			parent.ExecuteResultNotice("#{result}","#{MESSAGE}");
+		}
+	}
+</script>

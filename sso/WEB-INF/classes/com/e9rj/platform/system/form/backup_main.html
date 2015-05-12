@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.backup";
+	var interval;
+	//过滤按钮权限
+	var auth = "#{RESOURCE_AUTH}";
+	$(document).ready(function () {
+		//$('body').layout();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//tab组件初始化
+		if($("#contentTabs").html()!=null){
+			$( "#contentTabs").tabs({
+				ajaxOptions: {
+					error: function( xhr, status, index, anchor ) {
+						$( anchor.hash ).html(
+							"加载出错" );
+					}
+				}
+			});
+			//移去tabs的ui-widget-header样式
+			$( "#contentTabs > ul").removeClass("ui-widget-header");
+			$( "#contentTabs > ul").addClass("ui-widget-content");
+			$(".ui-tabs-panel").css("padding","0").css("padding-top","2px");
+		}
+		//tab点击事件
+		$('#contentTabs').bind('tabsselect', function(event, ui) {
+			   $("#buttons").append($("#buttonset"));
+			   var pan = $(".ui-tabs-panel");
+			   for(var i=0;i<pan.length;i++){
+		    		pan.html("");
+		       }
+		});
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		
+		$( "#buttonset" ).buttonset();
+		//end****************************************
+		//查询按钮
+		$("#searchBtn").click(function(){
+			var url = queryAction + "&TAB="+$("#contentTabs").tabs('option', 'selected');
+			commonQuery(url,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		
+	});
+	function initBtn(){
+		
+		//备份按钮
+		$("#backupBtn").click(function(){
+			
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOneOrMore(selectedId))return;
+	        var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+	        
+	        var rows = selectedId.split(",");
+			var ids = "";
+	        var keys = "";
+	        $.each(rows, function() {
+				var rowData = $("#gridTable").jqGrid("getRowData", this);  
+				ids = ids + rowData.TABLE_NAME + ",";
+				keys = keys + rowData.TABLE_KEY + ":";
+			});
+	        
+	        $( "#progressbar" ).progressbar({
+				value: 0
+			});
+			$("#progressbar").css("display","block");
+			
+	    	interval = setInterval(updateProcess, 100);
+	    	
+	        var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!backupData&TABLES="+ids+"&KEYS="+keys+"&TMP="+new Date();
+	        $.hkajax(url,"",
+	        		{
+	        			async : true,  
+	        			success:function(data){
+	        				clearInterval(interval);
+	        				$.uimessage(data.result);
+	        				$(".ui-progressbar-value").html(" 备份成功!");
+	        				$( "#progressbar" ).progressbar( "option", "value", 100 );
+	        			},
+	        			error:  function(xhr,status,error) {//请求失败处理函数  
+	        				clearInterval(interval);
+	        				if(xhr.responseText.indexOf("<html>")>-1){
+	    		        		document.write(xhr.responseText);
+	    		        	}else{
+	    		        		$.uialert('请求失败');  
+	    		        	}
+	    		        } 
+	        		});
+		});
+		
+		//还原按钮事件
+		$("#restoreBtn").click(function(){
+			var ids = getSelectedCheckbox("gridTable");
+			var subids = getSelectedCheckbox(subgrid);
+			if(ids==""){
+				$.uialert("请选择一条主数据!");
+				return false;
+			}else if(ids.indexOf(",")>0){
+				$.uialert("只能选择一条主数据!");
+				return false;
+			}
+			var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!restoreData&TMP="+new Date();
+			$.uiyesorno("是否保留增量数据？", "确认提示",
+				function() {
+					resotreData(ids,subids,url+"&CMD=Y");
+				},
+		        function() {
+					resotreData(ids,subids,url+"&CMD=N");
+		        },
+		    	function(){
+		        	//取消
+		        }    
+			);
+		});
+		
+		//删除按钮事件
+		$("#delBtn").click(function(){
+			
+			var ids = getSelectedCheckbox("gridTable");
+			var subids = getSelectedCheckbox(subgrid);
+			if(ids==""){
+				$.uialert("请选择一条主数据!");
+				return false;
+			}else if(ids.indexOf(",")>0){
+				$.uialert("只能选择一条主数据!");
+				return false;
+			}
+			
+			
+			$.uiconfirm("确定要删除吗？", "确认提示",
+				function() {
+					
+					var rowData = $("#gridTable").jqGrid("getRowData", ids); 
+					var dir = rowData.FILENAME;
+					if(!subids){
+						subids = "";
+					}
+					var filenameStr = "";
+					jQuery.each(subids, function() {
+						var rowData = $("#"+subgrid).jqGrid("getRowData", this);  
+						filenameStr = filenameStr + rowData.TABLENAME + ",";
+					});
+					var restoreurl = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!delBackupFile&TMP="+new Date();
+					$.hkajax(
+							restoreurl,
+							"DIRNAME="+dir+"&TABLENAME="+filenameStr,
+							{
+								async : true,  
+								success:function(data){
+									var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!backHistory&TMP="+new Date();
+									commonQuery(url,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+			        				$.uimessage(data.result);
+								}
+							});
+				      },
+				      function() {
+				        //取消
+				      });
+			
+			
+			
+			
+			
+		});
+		
+	}
+	function updateProcess(){
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!process&TMP="+new Date();
+		
+		$.hkajax(url,"",{
+			async : true,  
+			success:function(data){
+				var tablename = data.tablename;
+				var tablenums = data.tablenums;
+				var currnum = data.currnum;
+				$( "#progressbar" ).progressbar({
+					value: Math.round((currnum/tablenums)*100)
+				});
+				//white-space:nowrap
+				$(".ui-progressbar-value").css("padding-top","4px").css("padding-left","2px").css("text-align","left").css("white-space","nowrap");
+				$(".ui-progressbar-value").html(" 总进度：" + $( "#progressbar" ).progressbar( "option", "value") + "% 当前表：" + tablename);
+			}
+		});
+	}
+	//还原
+	function resotreData(ids,subids,url){
+		var rowData = $("#gridTable").jqGrid("getRowData", ids); 
+		var dir = rowData.FILENAME;
+		if(!subids){
+			subids = "";
+		}
+		var filenameStr = "";
+		jQuery.each(subids.split(","), function() {
+			var rowData = $("#"+subgrid).jqGrid("getRowData", this);  
+			filenameStr = filenameStr + rowData.TABLENAME + ",";
+		});
+		//进度条
+		$( "#progressbar" ).progressbar({
+			value: 0
+		});
+		$("#progressbar").css("display","block");
+		interval = setInterval(updateProcess, 100);
+		var restoreurl = url;//"HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!restoreData&TMP="+new Date();
+		$.hkajax(
+				restoreurl,
+				"DIRNAME="+dir+"&TABLENAME="+filenameStr,
+				{
+					async : true,  
+					success:function(data){
+						clearInterval(interval);
+        				$.uialert(data.result);
+        				$(".ui-progressbar-value").html(" 还原成功!");
+        				$( "#progressbar" ).progressbar( "option", "value", 100 );
+					},
+        			error:  function(xhr,status,error) {//请求失败处理函数  
+        				clearInterval(interval);
+        				if(xhr.responseText.indexOf("<html>")>-1){
+    		        		document.write(xhr.responseText);
+    		        	}else{
+    		        		$.uialert('请求失败');  
+    		        	}
+    		        } 
+				});
+	}
+    </script>
+    <style type="text/css">
+    ul.ztree {width:99%;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+		<fieldset id="selectCondition" class="ui-corner-all">
+			<div>
+				<form id="searchform" onSubmit="return false" style="margin:0;">
+					<table style="width: 100%;table-layout:fixed">
+						<tr>
+							<td style="width: 310px;white-space:nowrap;overflow:hidden;word-break:break-all;" nowrap='nowrap'>
+								表名：
+								<input type="text" id="TABLENAME" name="TABLENAME">
+								<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+								<input type="text" style="display: none;" id="SCHEMA" name="SCHEMA" value="zkxj" readonly="readonly">
+							</td>
+							<td><div id="progressbar"></div></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</fieldset>
+	</div>
+	<script type="text/javascript">
+		createSelectCondition();
+	</script>
+	<div id="contentTabs" >
+		<ul >
+			<LI label="数据备份"><A href="HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.backup&TAB=1">数据备份</A></LI>
+			<LI label="数据还原"><A href="HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.backup&TAB=2">数据还原</A></LI>
+		</ul>
+	</div>
+	<div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;"></div>
+</body>
+</html>

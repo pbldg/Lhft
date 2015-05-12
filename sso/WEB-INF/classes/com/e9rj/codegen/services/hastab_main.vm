@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=$info.get('BUSINESSKEY')";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=$info.get('BUSINESSKEY')";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=$info.get('BUSINESSKEY')";
+	var interval;
+	//过滤按钮权限
+	var auth = "#{RESOURCE_AUTH}";
+	jQuery(document).ready(function () {
+		//jQuery('body').layout();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//tab组件初始化
+		if(jQuery("#contentTabs").html()!=null){
+			jQuery( "#contentTabs").tabs({
+				ajaxOptions: {
+					error: function( xhr, status, index, anchor ) {
+						jQuery( anchor.hash ).html(
+							"加载出错" );
+					}
+				}
+			});
+			//移去tabs的ui-widget-header样式
+			jQuery( "#contentTabs > ul").removeClass("ui-widget-header");
+			jQuery( "#contentTabs > ul").addClass("ui-widget-content");
+			jQuery(".ui-tabs-panel").css("padding","0").css("padding-top","2px");
+		}
+		//tab点击事件
+		jQuery('#contentTabs').bind('tabsselect', function(event, ui) {
+			   jQuery("#buttons").append(jQuery("#buttonset"));
+			   var pan = jQuery(".ui-tabs-panel");
+			   for(var i=0;i<pan.length;i++){
+		    		pan.html("");
+		       }
+		});
+		//按钮样式		
+		jQuery( "input:button, button", "div" ).button();
+		
+		
+		jQuery( "#buttonset" ).buttonset();
+		//end****************************************
+		//查询按钮
+		jQuery("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		
+	});
+	function initBtn(){
+
+		
+		//新增按钮
+		jQuery("#addBtn").click(function(){
+			popSaveInfo(gotoAction,"新增信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//修改按钮
+		jQuery("#updateBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = jQuery("#gridTable").jqGrid("getRowData", selectedId);  
+	        var url = gotoAction;##
+			#foreach($key in $keyList)
+			
+			url = url + "&$key="+rowData.$key;##
+			#end
+			
+	        popSaveInfo(url,"修改信息",globalPopWidth,globalPopHeightTinny);
+	        
+		});
+		
+		//查看按钮
+		jQuery("#readBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+			var rowData = jQuery("#gridTable").jqGrid("getRowData", selectedId); 
+	        var url = gotoAction;##
+			#foreach($key in $keyList)
+			
+			url = url + "&$key="+rowData.$key;##
+			#end
+			
+			popReadInfo(url,"查看信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//删除按钮
+		jQuery("#delBtn").click(function(e){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOneOrMore(selectedId))return;
+			deleteInfo(e,selectedId);
+		});
+	}
+	//删除操作
+	function deleteInfo(e,rowid){
+		var rows = rowid.split(",");
+		var ids = "";
+		jQuery.each(rows, function() {
+			var rowData = jQuery("#gridTable").jqGrid("getRowData", this); 
+			var key = "";
+			#foreach($key in $keyList)
+			#if($velocityCount==1)
+			
+			key = rowData.$key;##
+			#else
+			
+			key = key + ":" +  rowData.$key;##
+			#end
+			#end
+
+			ids = ids + key + ",";
+		});
+		jQuery.uiconfirm("确定要删除吗？", "确认提示",
+	      function() {##
+			#set($size = $keyList.size())
+			#if($size=='1')
+			#foreach($key in $keyList)
+			
+			var url = delAction + "&$key="+ids;##
+			#end
+			#end
+			#if($size!=1)
+			
+			var url = delAction + "&KEYS="+ids;##
+			#end
+
+			commonDelete(url);
+	      },
+	      function() {
+	        //取消删除
+	      });
+	}
+    </script>
+    <style type="text/css">
+    ul.ztree {width:99%;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+		<fieldset id="selectCondition" class="ui-corner-all">
+			<div>
+				<form id="searchform" onSubmit="return false" style="margin:0;">
+					<table style="width: 100%;table-layout:fixed">
+						<tr>
+							<td style="width: 310px;white-space:nowrap;overflow:hidden;word-break:break-all;" nowrap='nowrap'>##
+        					#foreach($con in $conList)
+        				
+        						$con.CONNAME：<input type="text" id="$con.CONKEY" name="$con.CONKEY"/>##
+							#end
+							
+								<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+							</td>
+							<td><div id="progressbar"></div></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</fieldset>
+	</div>
+	<script type="text/javascript">
+		createSelectCondition();
+	</script>
+	<div id="contentTabs" >
+		<ul >##
+			#foreach($tab in $tabList)
+				
+			<LI label="$tab.get('TABNAME')"><A href="HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=$info.get('BUSINESSKEY')&TABID=$velocityCount&CMD=TAB">$tab.get('TABNAME')</A></LI>##	
+			#end
+			
+		</ul>
+	</div>
+	<div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;"></div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		var gridUrl = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.form!queryEditTabList&CONN_ID="+connId+"&TABLE_NAME=#{TABLE_NAME}&FOREIGN_KEY_#{FOREIGN_KEY}=#{FOREIGN_KEY_VALUE}";
+		$.grid(
+				"gridTable#{TABLE_NAME}",
+				gridUrl,
+				"",
+				"gridPager#{TABLE_NAME}",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+								TABLE_NAME, 
+						com.e9rj.platform.form.FormParseFacade.getSearchListString(MODEL_KEY)
+						)},
+			    	onSelectRow:function(rowid){
+			    		//jQuery('#gridTable').jqGrid('editRow',rowid,true);
+			    		//删除模板span中的name属性，否则提交的数据会有问题
+			    		//$(".editable > span").removeAttr("name");
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable",rowid);
+			    		var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+						var url = gotoAction + "&TPLID="+rowData.TPLID+"&TMP="+new Date();
+						popReadInfo(url,"查看信息",globalPopWidthLong,globalPopHeightLong);
+			    	},
+			    	gridComplete: function () {
+			    	},
+			    	loadComplete:function(){
+			    		$("#gridTable#{TABLE_NAME}").setGridHeight(290);
+			    		$("#gridTable#{TABLE_NAME}").setGridWidth(792);
+			        }
+				});
+    });
+
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+		<input type="text" style="display: none;" name="CMD" id="CMD"/>
+		<div id="contentTabs" style="width: 99.5%">
+			<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" >
+				<table id="gridTable#{TABLE_NAME}" class="ui-pg-table"></table>  
+		        <div id="gridPager#{TABLE_NAME}" style="height: 36px"></div>
+			</div>
+		</div>
+</body>
+</html>

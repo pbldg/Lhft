@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var subgrid;
+	$(document).ready(function () {
+		author(auth);
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!backHistory&TMP="+new Date();
+		$.grid(
+				"gridTable",
+				url,
+				$("#searchform").serialize(),
+				"",
+				{
+					colModel:[
+								{name:"FILENAME",index:"FILENAME",label:"文件名"},
+								{name:"BACKUP_TIME",index:"BACKUP_TIME",label:"备份完成时间",width:"80px"},
+								{name:"BACKER",index:"BACKER",label:"备份人",width:"80px"}
+					          ],
+			    	onSelectRow:function(rowid){
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv','contentDiv',true);
+			    	},//注意：以下为子表内容，没有子表时不需要以下代码
+			    	subGrid : true, 
+			    	subGridRowExpanded: function(subgrid_id, row_id) {
+			    		var subgrid_table_id, pager_id; 
+			    		subgrid_table_id = subgrid_id+"_t"; 
+			    		pager_id = "p_"+subgrid_table_id; 
+			    		var rowData = $("#gridTable").jqGrid("getRowData", row_id);  
+			    		$("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table><div id='"+pager_id+"' class='scroll'></div>");
+			    		subgrid = subgrid_table_id;
+			    		$.grid(
+			    				subgrid_table_id,
+			    				"HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.backup!backHistoryTable&FILENAME="+rowData.FILENAME+"&TABLENAME="+$("#TABLENAME").val()+"&TMP="+new Date(),
+			    				"",
+			    				"none",
+			    				{
+			    					forceFit:true,
+			    					multiselect: true,
+			    					colModel: [  
+			    								{name:"TABLENAME",index:"TABLE_NAME",label:"表名",width:80},
+			    								{name:"BACKUP_TIME",index:"BACKUP_TIME",label:"备份完成时间",width:100},
+			    								{name:"FILESIZE",index:"FILESIZE",label:"文件大小",width:80}
+			    				        	  ],
+			    			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    			    		//冒泡
+			    			    		e.stopPropagation();
+			    			    	},
+			    			    	gridComplete: function () {
+			    			    	}
+			    				});
+			    		}
+			    		//子表内容结束**************
+				});
+		
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv',true)});
+		
+		//判断分页设置
+		checkPager("gridTable");
+		//把按钮拷到主页面
+		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
+		//初始化按钮事件
+		initBtn();
+		$( "#buttonset" ).buttonset();
+		
+	});
+    </script>
+</head>
+<body >
+    <div id="contentDiv" tabLogo="#{tabLogo}">
+		<table id="gridTable"></table>  
+        <div id="gridPager" style="height: 36px"></div>
+		<span id="buttonset">
+			<button id="restoreBtn" rightval="4" style="width: 110px"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>开始还原</button>
+			<button id="delBtn" rightval="8" style="width: 110px"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除备份</button>
+		</span>
+    </div>
+</body>
+</html>

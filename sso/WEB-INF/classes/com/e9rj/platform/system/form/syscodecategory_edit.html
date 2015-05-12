@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/edittop.html"/>
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//重置表单（防止IE缓存）
+    	//$("#infoForm")[0].reset();
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTableShort").styleTable();
+		//按钮样式
+		$( "input:button, a, button", "div" ).button();
+    	//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=sys.syscodecategory");
+    	//按钮
+		$( "#buttonset" ).buttonset();
+    });
+    function saveInfo(){
+    	$('#infoForm').submit();
+    }
+	</script>
+</head>
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD">
+		<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTableShort" class="full" >
+			<!-- 为了样式协调必需要 -->
+			<tr style="height: 1px;">
+				<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+			</tr>
+			<!-- ***end*** -->
+			<tr>
+				<td height="33" width="200" align="right">分类编号：</td>
+				<td align="left" >
+				    <input type="text" name="CNO" id="CNO">
+				    <input type="text" style="display: none;" name="CODETYPE" id="CODETYPE" value="1">
+				    <input type="text" style="display: none;" name="OLDCNO" id="OLDCNO">
+				</td>
+			</tr>
+		    <tr>
+				<td height="33" width="200" align="right" >分类名称：</td>
+				<td align="left" >
+				    <input type="text" name="CNAME" id="CNAME" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="200" align="right" >应用范围：</td>
+				<td align="left" >
+				    <select id="APP_CODE" name="APP_CODE" onchange="loadTreeData()">
+				    
+				    </select>
+				</td>
+			</tr>
+        </table>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			#{FORM_IS_READONLY=="true"?'':'<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>'}
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="CODECATEGORY_BEAN.getCmd()"/>
+	<var name="CNO" value="CODECATEGORY_BEAN.get('CNO')" required="true" validate="required,maxSize[50]"/><!-- 分类编号 -->
+	<var name="OLDCNO" value="CODECATEGORY_BEAN.get('CNO')"/><!-- 分类编号 -->
+	<var name="CNAME" value="CODECATEGORY_BEAN.get('CNAME')" required="true" validate="required,maxSize[50]"/><!-- 分类名称 -->
+	<var name="CODETYPE" value="CODECATEGORY_BEAN.get('CODETYPE')" /><!-- 分类名称 -->
+	<var name="APP_CODE" value="CODECATEGORY_BEAN.get('APP_CODE')" validate="required" emptyoption="true" codesrcsql="select APP_CODE,APP_NAME from TS_APP order by ORDIDX"/>
+<!--Form Setting End-->

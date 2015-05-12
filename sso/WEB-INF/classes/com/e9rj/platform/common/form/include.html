@@ -1,0 +1,77 @@
+	<meta http-equiv="X-UA-Compatible" content="IE=9" />
+	<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/layout-default-latest.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/jquery/css/ui.jqgrid.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/jquery/css/ui.multiselect.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery.dialog.helpbutton.css" />
+    <link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+	<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery.contextMenu.css" />
+	<link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+	<!-- 时间选择控件的时间部分样式 -->
+	<link rel="stylesheet" href="/e9common/jquery/css/jquery.ui.datepicker.time.css" type="text/css"/>
+	
+    <script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery.layout-latest.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/grid.locale-zh-CN.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/ui.multiselect.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery.jqGrid.min.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/themeswitchertool.js"></script> 
+	<script type="text/javascript" src="/e9common/js/uiwindow.js"></script> 
+	<script type="text/javascript" src="/e9common/js/common.js"></script> 
+	<script type="text/javascript" src="/e9common/js/jquery.util.js"></script> 
+	<script type="text/javascript" src="/e9common/js/uigrid.js"></script> 
+	<script type="text/javascript" src="/e9common/js/selectCondition.js"></script> 
+    <script type="text/javascript" src="/e9common/jquery/ui/jquery.ui.position.js"></script>
+    <script type="text/javascript" src="/e9common/jquery/js/jquery.contextMenu.js"></script>
+    <script type="text/javascript" src="/e9common/js/uitables.js"></script> 
+    <script type="text/javascript" src="/e9common/js/jquery.cityselect.js"></script> 
+    <script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<script type="text/javascript" src="/e9common/jquery/js/jquery.ui.datepicker-zh-CN.js"></script>
+	<script type="text/javascript" src="/e9common/jquery/js/jquery.ui.datepicker.js"></script>
+	<script type="text/javascript" src="/e9common/jquery/js/jquery.ui.datepicker.time.js"></script>
+	<!-- <script type="text/javascript" src="/e9common/jquery/js/jquery-ui-timepicker-addon.js"></script>
+	<script type="text/javascript" src="/e9common/jquery/js/jquery.dialog.helpbutton.js"></script> -->
+	<script type="text/javascript" src="/e9common/js/date.js"></script>
+	<script type="text/javascript">
+	var itemNoSpan = $("<span id='RESOURCE_ITEMNO' style='display:none'>#{RESOURCE_ITEMNO}</span><span id='RESOURCE_RELATEITEMNO' style='display:none'>#{RESOURCE_RELATEITEMNO}</span>");
+	var alertDiv=$("<div id='alertArea' class='ui-widget' style='display:none;position:absolute;right:5px;top:8px;' onclick='$(\"#alertArea\").hide();'><div class='ui-state-error ui-corner-all' style='padding: 0 .7em;'><p><span class='ui-icon ui-icon-alert' style='float: left; margin-right: .3em;'></span><strong>提示:</strong> <span>本功能相关数据可能有修改，请注意是否<a href='#' onclick='location.reload();'>重新加载本页面</a>?&nbsp;&nbsp;&nbsp;</span><span style='position:absolute;right:10px;top:14px;cursor:pointer;' class='ui-icon ui-icon-close' onclick='$(\"#alertArea\").hide();'></span></p></div></div>");
+	var alertNum=0;
+		$(document).ready(function() {
+			$(document.body).append(itemNoSpan);
+			$(document.body).append(alertDiv);
+			//初始化日期控件
+			initDatePicker('/e9common/images/date.gif');
+			//初始化时间控件后，隐藏div
+			$('#ui-datepicker-div').hide();
+			//日期居中
+			setMiddle();
+			//扫描readonly元素
+			scanReadonly();
+			//计算textarea宽度
+			calTextAreaWidth("infoTable2");
+			//表单回车键查询功能
+			registEnterSubmit("searchform","searchBtn");
+			//按回车键到下一个表单元素
+			registEnterNext("infoForm");
+			//加载提示信息
+			//loadTip("#{FORMNAME}","#{com.e9rj.platform.common.BaseConstants.getGlobalValue('2','yellowgreen')}");
+		});
+		//关闭第一层弹出窗口
+		function closeIframe()
+		{
+		    $('#dialog-window').dialog('close');
+		    return false;
+		}
+		//关闭弹出窗
+		function closePopWindow(id)
+		{
+			$('#'+id).remove();
+		    $('#'+id).dialog('close');
+		    return false;
+		}
+		function alertReload(){
+			$("#alertArea").show();
+		}
+	</script>

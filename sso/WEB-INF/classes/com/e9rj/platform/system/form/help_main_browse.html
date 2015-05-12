@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+    
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+	<script type="text/javascript" src="/e9common/js/hktree.js"></script>
+	<script type="text/javascript" src="/e9common/ckeditor/ckeditor.js"></script>
+	<script type="text/javascript" src="/e9common/ckeditor/adapters/jquery.js"></script>
+	<script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+    <!-- 文件上传 -->
+    <script type="text/javascript" src="/e9common/swfupload/swfupload/swfupload.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/swfupload.queue.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/fileprogress.js"></script>
+	<script type="text/javascript" src="/e9common/swfupload/js/handlers.js"></script>
+	<script type="text/javascript" src="/e9common/js/icon.js"></script>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=platform.help";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=platform.help";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=platform.help";
+    var saveAction = "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.help";
+    //树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false,
+    		},
+    		edit: {
+				enable: true,
+				showRemoveBtn: false,
+				showRenameBtn: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				beforeDrop: beforeDrop
+			}
+		};
+	var filesetting = {
+			edit: {
+				enable: false,
+				showRenameBtn: false,
+    			showIcon: false,
+    			showLine: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				beforeDrop: beforeDrop
+			}
+		};
+	var fileNodes =[
+	 			
+	 		];
+	var zNodes,popNodes,tmpNodes,fileNodes,fileTree;
+	$(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//加载树数据
+		loadTreeData();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		$( "#buttonset" ).buttonset();
+		
+		//resize绑定
+		$(window).bind('resize', function(){
+			var objHeight = getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#buttonDiv").height()-40;
+			$("#contentDiv").height(objHeight);
+			$("#menuTree").height(objHeight);
+			$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height()-30);
+			$("#popTree").height(objHeight-150);
+			$("#popTree").width($("#PARENTTITLE").width()-30);
+			
+		}).trigger('resize');	
+		
+		$("#infoTable").styleTable();
+	  	
+		$.fn.zTree.init($("#menuTree"), setting, zNodes);
+		
+		setCheck('menuTree');
+		$.fn.zTree.init($("#fileTree"), filesetting, fileNodes);
+		
+		$.fn.zTree.getZTreeObj("menuTree").expandAll(true);
+
+	});
+	//加载树数据
+	function loadTreeData(){
+		//加载普通树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: queryAction + "&TREETYPE=&COLUMNTYPE=HELP",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+		
+	}
+	//取单个菜单信息
+	function getHelpinfo(helpId){
+		$("#infoForm")[0].reset();
+		$.hkajax( 
+	        gotoAction + "&HELPID="+helpId,//请求的action路径  
+	        "",
+	        {
+	        	success:function(data){ //请求成功后处理函数。    
+	        		$("#TITLE").html(data.TITLE);
+	        		$("#CONTENT").html(data.CONTENT).append('<br><ul id="fileTree" class="ztree" style="width:500px;height:100px;"></ul>');
+		        	//取附件信息
+		        	loadAttachedData(data.HELPID);
+		        }	
+	        });  
+	}
+	
+	//加载附件
+	function loadAttachedData(fid){
+		//加载附件树树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.help!getAttached&TABLENAME=TS_HELP&FID="+fid,//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	        	fileNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        	var fTree = $.fn.zTree.init($("#fileTree"), filesetting, fileNodes);
+	        	fTree.refresh();
+	        }  
+	    });  
+	}
+	function downloadFile(attaNo){
+		location.href="HttpChannel?action=DOWNLOADFILE_ACTION&ATTANO="+attaNo;
+	}
+	
+	var filter_context='';
+
+	
+
+	function findContext(){
+
+		//查找字符，设置高亮
+
+		var obj=document.getElementById("CONTENT");				
+
+		var filter_v=$('#KEY').val();
+
+		
+
+		if(!checkIsChinese(filter_v)){
+
+			//只能搜索汉字，搜索字
+
+			alert("查找内容只能为中文！");
+
+			return;
+
+		}
+
+		
+
+		if(filter_v==''){
+
+			if(filter_context!=''){
+
+				setFontHighLight(obj,'0',filter_context);
+
+			}
+
+			return;
+
+		}
+
+		
+
+		if(filter_context==''){
+
+			filter_context=filter_v;
+
+		}else{
+
+			//取消原来的高亮
+			setFontHighLight(obj,'0',filter_context);		
+
+		}
+
+		filter_context=filter_v;
+
+		//设置高亮
+
+		setFontHighLight(obj,'1',filter_v);
+
+	}
+
+    </script>
+    <style type="text/css">
+    	ul.ztree {width:316px;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;">
+	</div>
+	<table id="contentDiv" width="100%">
+		<tr>
+			<td valign="top" width="320"><ul id="menuTree" class="ztree ui-widget-content ui-corner-all"></ul></td>
+			<td align="left" valign="top" style="margin-left: 5px;">
+				<form method="post" name="infoForm" id="infoForm" action="/">
+					<input type="text" style="display: none;" name="CMD" id="CMD" value="A">
+					<div id="infoTableDiv" style="overflow: auto;">
+					<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable" class="full" >
+						<!-- 为了样式协调必需要 -->
+						<tr style="height: 1px;">
+							<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+						</tr>
+						<!-- ***end*** -->
+						<tr style="display: none;">
+							<td height="33" width="80" align="right" >ID：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="HELPID" id="HELPID" >
+							</td>
+						</tr>
+						<tr>
+							<td align="left" >
+							    <input type="text" style="width:60%" name="KEY" id="KEY" >
+							    <button id="searchBtn" type="button" onclick="findContext()"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+							</td>
+						</tr>
+						<tr>
+							<td height="33" align="center" id="TITLE"></td>
+						</tr>
+						<tr>
+							<td height="33" id="CONTENT" style="margin-left: 5px;">
+							</td>
+						</tr>
+			        </table>
+			        </div>
+				</form>
+			</td>
+		</tr>
+	</table>
+
+</body>
+</html>

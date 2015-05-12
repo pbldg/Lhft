@@ -1,0 +1,438 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript" src="/e9common/js/uitables.js"></script>
+	<script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=platform.module";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=platform.module";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=platform.module";
+    var saveAction = "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.module";
+    //树设置
+    var setting = {
+    		view: {
+    			selectedMulti: false
+    		},
+    		edit: {
+				enable: true,
+				showRemoveBtn: false,
+				showRenameBtn: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			},
+			callback: {
+				beforeDrop: beforeDrop
+			}
+		};
+	function beforeDrop(treeId, treeNodes, targetNode, moveType) {
+		//alert(treeId+" "+targetNode.id+"  "+moveType + " "+treeNodes[0].id)
+		var url = saveAction
+				+ "&targetid=" + targetNode.id
+				+ "&targetpid=" + targetNode.pId
+				+ "&moveType=" + moveType
+				+ "&selectedid=" + treeNodes[0].id
+				+ "&selectedpid=" + treeNodes[0].pId
+				$.hkajax(
+						url,//请求的action路径  
+						"",
+				        {
+					        success:function(data){ //请求成功后处理函数。    
+					        	//zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+					            var result = data.result;
+					        	if(result.indexOf("失败")>0){
+					        		$.uialert(result);
+					        	}
+					        }  
+				        });  
+	}
+	function setCheck() {
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		zTree.setting.edit.drag.isCopy = true;
+		zTree.setting.edit.drag.isMove = true;
+
+		zTree.setting.edit.drag.prev = true;
+		zTree.setting.edit.drag.inner = true;
+		zTree.setting.edit.drag.next = true;
+	}
+	var zNodes,popNodes,tmpNodes;
+	$(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//加载树数据
+		loadTreeData();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		$( "#buttonset" ).buttonset();
+		
+		//resize绑定
+		$(window).bind('resize', function(){
+			var objHeight = getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#buttonDiv").height()-40;
+			$("#contentDiv").height(objHeight);
+			$("#menuTree").height(objHeight);
+			$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height()-10);
+			$("#popTree").height(objHeight-150);
+			$("#popTree").width($("#PARENTMODULE_NAME").width()-30);
+			
+		}).trigger('resize');	
+		
+		$("#infoTable").styleTable();
+	  	
+		$.fn.zTree.init($("#menuTree"), setting, zNodes);
+		setCheck();
+		$.fn.zTree.init($("#popTree"), setting, popNodes);
+	    
+		$("#expandBtn").bind("click", {type:"expandAll"}, expandNode);
+		$("#collapseBtn").bind("click", {type:"collapseAll"}, expandNode);
+		$("#saveBtn").bind("click", saveInfo);
+		//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitThisInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.module")
+		//默认展开菜单
+		$("#expandBtn").click();
+	});
+	//加载树数据
+	function loadTreeData(){
+		//加载普通树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: queryAction + "&TREETYPE=",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+		//加载弹出树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: queryAction + "&TREETYPE=pop",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	            tmpNodes = data;
+	        }  
+	    });  
+	}
+	//取单个菜单信息
+	function getModuleObject(moduleNo){
+		$.ajax({  
+	        async : true,  
+	        cache:false,  
+	        type: 'POST',  
+	        dataType : "json",  
+	        url: gotoAction + "&MODULENO="+moduleNo,//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            //alert(data.MODULENAME);
+	        	
+	        	$("#MODULENO").val(data.MODULENO);
+	        	$("#MODULENAME").val(data.MODULENAME);
+	        	$("#REMARK").val(data.REMARK);
+	        	$("input[name='ENABLED'][value='"+data.ENABLED+"']").attr("checked",true);
+	        	$("#PARENTMODULENO").val(data.PARENTMODULENO);
+	        	$("#PARENTMODULE_NAME").val(data.PARENTMODULE_NAME);
+	        	//$("#ISGROUP").val(data.ISGROUP);
+	        	$("input[name='OPLIMIT'][value='"+data.OPLIMIT+"']").attr("checked",true);
+	        	$("#ORDIDX").val(data.ORDIDX);
+	        	$("#CMD").val("U");
+	        	
+	        }  
+	    });  
+	}
+	//展开/关闭节点
+	function expandNode(e) {
+		var zTree = $.fn.zTree.getZTreeObj("menuTree"),
+		type = e.data.type,
+		nodes = zTree.getSelectedNodes();
+		if (type.indexOf("All")<0 && nodes.length == 0) {
+			alert("请先选择一个父节点");
+		}
+
+		if (type == "expandAll") {
+			zTree.expandAll(true);
+		} else if (type == "collapseAll") {
+			zTree.expandAll(false);
+		} else {
+			var callbackFlag = $("#callbackTrigger").attr("checked");
+			for (var i=0, l=nodes.length; i<l; i++) {
+				zTree.setting.view.fontCss = {};
+				if (type == "expand") {
+					zTree.expandNode(nodes[i], true, null, null, callbackFlag);
+				} else if (type == "collapse") {
+					zTree.expandNode(nodes[i], false, null, null, callbackFlag);
+				} else if (type == "toggle") {
+					zTree.expandNode(nodes[i], null, null, null, callbackFlag);
+				} else if (type == "expandSon") {
+					zTree.expandNode(nodes[i], true, true, null, callbackFlag);
+				} else if (type == "collapseSon") {
+					zTree.expandNode(nodes[i], false, true, null, callbackFlag);
+				}
+			}
+		}
+	}
+	//提交表单
+	function submitThisInfoForm(formid,url){
+		$('#'+formid).submit(function(){
+	        jQuery.ajax({
+	            url: url,   // 提交的页面
+	            data: $('#'+formid).serialize(), // 从表单中获取数据
+	            type: "POST",                   // 设置请求类型为"POST"，默认为"GET"
+	            dataType:"json",
+	            beforeSend: function()          // 设置表单提交前方法
+	            {
+	            	//验证
+	                return validateForm;
+	            },
+	            error: function(request) {      // 设置表单提交出错
+	                $.uialert("表单提交出错，请稍候再试");
+	            },
+	            success: function(data) {
+	                var result = data.result;
+	                //var currTabId = getCurrTabId();
+	                //parent.$("#"+currTabId).contents().find("#searchBtn").click();
+	                
+	                if(result.indexOf("失败")>0){
+	                	$.uialert(result);
+	                	return;
+	                }else{
+	                	//重新加载树
+	                	loadTreeData();
+	                	$.uialert(result);
+        	        	var zTree = $.fn.zTree.init($("#menuTree"), setting, zNodes);
+        	        	zTree.refresh();
+	                	//展开原来的节点
+	                	var pNode = zTree.getNodeByParam("id",$("#PARENTMODULENO").val());
+	                	zTree.expandNode(pNode, true, null, null);
+	                	if($("#CMD").val()=="A"){
+	        				//add($("#PARENTMODULENO").val(),data);
+	                		$("#"+formid)[0].reset();
+	                	}
+	                }
+	                
+	            }
+	        });
+	        return false;
+	    });
+	}
+	//显示弹出树
+	function showModule() {
+		tmpNodes = popNodes;
+		$.fn.zTree.init($("#popTree"), setting, tmpNodes);
+		var popTree = $.fn.zTree.getZTreeObj("popTree");
+		//过滤掉当前节点以子节点
+		var currId = $("#MODULENO").val();
+		var pNode = popTree.getNodeByParam("id",currId);
+		//zTree.removeChildNodes(pNode);
+		popTree.removeNode(pNode);
+		
+		var cityObj = $("#PARENTMODULE_NAME");
+		var cityOffset = $("#PARENTMODULE_NAME").offset();
+		$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() + "px"}).slideDown("fast");
+
+		$("body").bind("mousedown", onBodyDown);
+	}
+	function hideModule() {
+		$("#menuContent").fadeOut("fast");
+		$("body").unbind("mousedown", onBodyDown);
+	}
+	function onBodyDown(event) {
+		if (!(event.target.id == "menuBtn" || event.target.id == "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+			hideModule();
+		}
+	}
+	//设置父节点信息
+	function getModuleInfo(id,name){
+		$("#PARENTMODULE_NAME").val(name);
+		$("#PARENTMODULENO").val(id);
+	}
+	//删除菜单
+	function delModule(){
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+		if(nodes==""){
+			$.uialert("请选择数据!");
+			return;
+		}
+		$.uiconfirm("确定要删除吗？", "确认提示",
+	      function() {
+			
+			var id = nodes[0].id;
+			var url = delAction + "&MODULENO="+id;
+			jQuery.ajax({
+		        url: url,   // 提交的页面
+		        data: "", // 从表单中获取数据
+		        type: "POST",                   // 设置请求类型为"POST"，默认为"GET"
+		        dataType:"json",
+		        error: function(request) {      // 设置表单提交出错
+		            $.uialert("删除出错，请稍候再试");
+		        },
+		        success: function(data) {
+		        	
+		            var result = data.result;
+		            $.uialert(result);
+		            if(result.indexOf("成功")>0){
+		            	//删除弹出树节点
+		            	var popTree = $.fn.zTree.getZTreeObj("popTree");
+		        		var popNode = popTree.getNodeByParam("id",id);
+		        		popTree.removeNode(popNode);
+		        		popNodes = remove(popNodes,"id",id);
+		        		//删除普通树节点
+		        		var zNode = zTree.getNodeByParam("id",id);
+		        		zTree.removeNode(zNode);
+		        		//重置 表单
+		        		$("#infoForm")[0].reset();
+		            }
+		        }
+		    });
+	      });
+	}
+	//跳转到添加
+	function toAdd(){
+		$("#infoForm")[0].reset();
+		//设置默认父编号为当前选中节点
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getSelectedNodes();
+		if(nodes==null || nodes.length==0 || nodes==""){
+			//$.uialert("请选择一个节点!");
+			//return;
+		}else{
+			var id = nodes[0].id;
+			var zNode = zTree.getNodeByParam("id",id);
+			$("#PARENTMODULENO").val(zNode.id);
+			$("#PARENTMODULE_NAME").val(zNode.name);
+		}
+
+		$("#CMD").val("A");
+	}
+	//保存
+	function saveInfo(){
+    	$('#infoForm').submit();
+    }
+ 
+    </script>
+    <style type="text/css">
+    	ul.ztree {width:316px;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;">
+	</div>
+	<table id="contentDiv" width="100%">
+		<tr>
+			<td valign="top" width="320"><ul id="menuTree" class="ztree ui-widget-content ui-corner-all"></ul></td>
+			<td align="left" valign="top" style="margin-left: 5px;">
+				<form method="post" name="infoForm" id="infoForm" action="/">
+					<input type="text" style="display: none;" name="CMD" id="CMD" value="A">
+					<div id="infoTableDiv" style="overflow: auto;">
+					<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTable" class="full" >
+						<!-- 为了样式协调必需要 -->
+						<tr style="height: 1px;">
+							<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+						</tr>
+						<!-- ***end*** -->
+						<tr style="display: none;">
+							<td height="33" width="150" align="right" >模块号：</td>
+							<td align="left">
+							    <input type="text" style="width:90%" name="MODULENO" id="MODULENO" >
+							</td>
+						</tr>
+						<tr>
+							<td height="33" width="150" align="right" >模块名：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="MODULENAME" id="MODULENAME" >
+							</td>
+						</tr>
+						<tr>
+							<td height="25" width="150" align="right" >父模块组：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="PARENTMODULE_NAME" id="PARENTMODULE_NAME" onclick="showModule();" readonly="readonly">
+							    <input type="text" style="width:90%;display: none;" name="PARENTMODULENO" id="PARENTMODULENO" onclick="showModule();" readonly="readonly">
+							</td>
+						</tr>
+						<tr style="display: none;">
+							<td height="33" width="150" align="right" >排序号：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="ORDIDX" id="ORDIDX" >
+							</td>
+						</tr>
+						<tr>
+							<td height="33" width="150" align="right" >操作限制：</td>
+							<td align="left" >
+								<input type="radio" id="radio1" name="OPLIMIT" value="1" checked="checked"/>可操作
+								<input type="radio" id="radio2" name="OPLIMIT" value="0"/>不可操作				    
+							</td>
+						</tr>
+						<tr>
+							<td height="33" width="150" align="right" >是否启用：</td>
+							<td align="left" >
+							    <input type="radio" id="radio1" name="ENABLED" value="1" checked="checked"/>启用
+								<input type="radio" id="radio2" name="ENABLED" value="0"/>禁用
+							</td>
+						</tr>
+						<tr>
+							<td height="33" width="150" align="right" >备注：</td>
+							<td align="left" >
+							    <input type="text" style="width:90%" name="REMARK" id="REMARK" >
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2" align="center">
+								<button id="saveBtn" type="button"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>
+							</td>
+						</tr>
+			        </table>
+			        </div>
+				</form>
+			</td>
+		</tr>
+	</table>
+    <div id="buttonDiv" style="position:absolute;bottom:10px;left:3px;">
+		<span id="buttonset">
+			<button id="addBtn" rightval="2" onclick="toAdd()" type="button"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="delBtn" rightval="8" onclick="delModule()" type="button"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>	
+			<button id="expandBtn" type="button"><span class="ui-icon ui-icon-folder-open" style="float: left;"></span>展开</button>
+			<button id="collapseBtn" type="button"><span class="ui-icon ui-icon-folder-collapsed" style="float: left;"></span>折叠</button>
+		</span>
+	</div>
+	<div id="menuContent" class="ui-widget-content" style="display:none; position: absolute;">
+		<ul id="popTree" class="ztree" style="margin-top:0; width:160px;"></ul>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="CMD" value="MODULE_BEAN.getCmd()"/>
+<var name="MODULENO" value="MODULE_BEAN.get('MODULENO')"/><!-- 模块号 -->
+<var name="MODULENAME" value="MODULE_BEAN.get('MODULENAME')" required="true" validate="required,maxSize[50]"/><!-- 模块名 -->
+<var name="ORDIDX" value="MODULE_BEAN.get('ORDIDX')"/><!-- 排序号 -->
+<var name="OPLIMIT" value="MODULE_BEAN.get('OPLIMIT')"/><!-- 操作限制 -->
+<var name="ENABLED" value="MODULE_BEAN.get('ENABLED')"/><!-- 是否启用 -->
+<var name="REMARK" value="MODULE_BEAN.get('REMARK')" required="false" validate="maxSize[50]"/><!-- 备注 -->
+<!--Form Setting End-->

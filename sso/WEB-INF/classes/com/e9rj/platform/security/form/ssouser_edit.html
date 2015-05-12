@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/edittop.html"/>
+    
+    <script type="text/javascript">
+    //验证变量
+    var validateForm = false;
+    $(function(){
+    	//重置表单（防止IE缓存）
+    	//$("#infoForm")[0].reset();
+    	//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//表格样式
+		$("#infoTableShort").styleTable();
+		//按钮样式
+		$( "input:button, a, button", "div" ).button();
+    	//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitInfoForm("infoForm", "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.sso.user");
+		//按钮
+		$( "#buttonset" ).buttonset();
+		
+		$("#ORGNAME").click(popOrg);
+		getUserApp();
+    });
+    //弹出组织机构选择框 
+    function popOrg(){
+    	var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.org!popOrg";
+		url += "&ORGCODE="+$("#ORGCODE").val();
+		url += "&ORG_CODE=ORGCODE&ORG_NAME=ORGNAME";
+		url += "&POP_SOURCE=POP";
+		$.jqPopWindow(
+			'org',
+			url,
+			{
+				closeOnEscape: true,
+				title: "组织机构选择", 
+				width: 800, 
+				height: 600, 
+				draggable: true
+			});
+    }
+    function saveInfo(){
+    	$('#infoForm').submit();
+    }
+    
+    //取用户app数据
+    function getUserApp(){
+    	var userAppCode = ",#{USER_BEAN.get('APP_CODE')},";
+    	var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.sso.user!getUserApp";
+    	$.hkajax(url,
+    			"",
+    			{
+    				success:function(data){
+    					if(data.result!=""){
+    						var str = data.result.split(";")
+    						for(var i=0;i<str.length;i++){
+    							if(str[i]!=""){
+    								var code = str[i].split(",")[0];
+    								var name = str[i].split(",")[1];
+    								var checked = "";
+    								if(userAppCode.indexOf(','+code+',')>-1){
+    									checked = " checked ";
+    								}
+									var ck = '<input type="checkbox" name="APP_CODE" id="APP_CODE'+code+'" value="'+code+'"'+checked+'>'+name+"&nbsp;";		
+									$("#userAppSpan").append(ck);
+    							}
+    						}
+    					}
+    				}
+    			}
+    			);
+    }
+	</script>
+</head>
+
+<body class="ui-widget-content" style="border: 0">
+	<form method="post" name="infoForm" id="infoForm" action="/">
+		<input type="text" style="display: none;" name="CMD" id="CMD">
+		<table style="width: 100%; " cellpadding="0" cellspacing="0" id="infoTableShort" class="full" >
+			<!-- 为了样式协调必需要 -->
+			<tr style="height: 1px;">
+				<td style="height: 0px;font-size: 0px;border-top-style: none;border-left-style: none;border-right-style: none; " colspan="4"><img src="/e9common/images/empty.gif" style="height: 1px;"></td>
+			</tr>
+			<!-- ***end*** -->
+			<tr>
+				<td height="33" width="200" align="right" >操作员：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="OPNO" id="OPNO" #{USER_BEAN.getCmd()=='U'?'readonly="readonly"':''} >
+				    <input type="text" style="width:90%;display: none;" name="OLDOPNO" id="OLDOPNO" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="200" align="right" >操作员名：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="OPNAME" id="OPNAME" >
+				</td>
+			</tr>
+			<tr #{USER_BEAN.getCmd()=='A'?'':'style="display: none;"'} >
+				<td height="33" width="200" align="right" >密码：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="PWD" id="PWD" >
+				</td>
+			</tr>
+			<tr style="display:none;">
+				<td height="33" width="200" align="right" >用户KEY：</td>
+				<td align="left" >
+				    <input type="text" style="width:90%" name="USERKEY" id="USERKEY" >
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="200" align="right" >是否启用：</td>
+				<td align="left" >
+				    <input type="radio" id="ENABLED1" name="ENABLED" value="1" checked="checked"/>启用
+					<input type="radio" id="ENABLED2" name="ENABLED" value="0"/>禁用
+				</td>
+			</tr>
+			<tr>
+				<td height="33" width="200" align="right" >应用权限：</td>
+				<td align="left" >
+				    <span id="userAppSpan"></span>
+				</td>
+			</tr>
+        </table>
+	</form>
+	<!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			#{FORM_IS_READONLY=="true"?'':'<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存</button>'}
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="CMD" value="USER_BEAN.getCmd()"/>
+	<var name="OPNO" value="USER_BEAN.get('OPNO')" required="true" validate="required,maxSize[10]"/><!-- 操作员 -->
+	<var name="OLDOPNO" value="USER_BEAN.get('OPNO')"/><!-- 操作员 -->
+	<var name="OPNAME" value="USER_BEAN.get('OPNAME')" required="true" validate="required,maxSize[10]"/><!-- 操作员名 -->
+	<var name="USERKEY" value="USER_BEAN.get('USERKEY')" required="false" validate="maxSize[32]"/><!-- 用户KEY -->
+	<var name="ENABLED" value="USER_BEAN.get('ENABLED')"/><!-- 是否启用 -->
+	<var name="OPLIMIT" value="USER_BEAN.get('OPLIMIT')"/><!-- 操作限制 -->
+	<var name="APP_CODE" value="USER_BEAN.get('APP_CODE')"/><!-- 组织机构 -->
+<!--Form Setting End-->

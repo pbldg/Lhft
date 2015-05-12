@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    
+	$(document).ready(function () {
+		var url = "";
+		if("#{com.xmzy.framework.core.FrameworkConstant.getLoginMode()}"=="cas"){
+			url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=platform.sso.user";
+		}else{
+			url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.user";
+		}
+		//$('body').layout();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				url,
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel: [  
+						{name:"OPNO",index:"OPNO",label:"操作员"},
+						{name:"OPNAME",index:"OPNAME",label:"操作员名"},
+						{name:"USERKEY",index:"USERKEY",label:"用户KEY"},
+						{name:"CREATETIME",index:"CREATETIME",label:"创建时间",formatter:'date',	formatoptions:{newformat: 'Y-m-d'}}
+			        	  ],
+			    	onSelectRow:function(rowid){
+			    		selectUser(rowid);
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv,buttonset,buttonset,buttonset','contentDiv');
+			    		$("#gridTable .cbox").each(function(i,item){
+			    			var rowData = $("#gridTable").jqGrid("getRowData", i+1);  
+			    			$('#selectUser option').each(function(){
+				    			if($(this).val() == rowData.OPNO){
+				    				$(item).attr("checked",true);
+				    				jQuery('#gridTable').jqGrid('setSelection',i+1);
+				    			}
+				    		}); 
+		    			});
+			    		//全选按钮处理
+			    		$(".ui-jqgrid-htable .cbox").click(function (){
+			    			$("#gridTable .cbox").each(function(i,item){
+			    				selectUser(i+1);
+			    			});
+			    		});
+			    	}
+				});
+		//resize绑定
+		$(window).bind('resize', function(){
+			resizeGrid('gridTable','queryDiv,buttonset,buttonset,buttonset','contentDiv');
+		});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		$( "#buttonset" ).buttonset();
+		
+		$("#searchBtn").click(function(){
+			commonQuery(url,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		})
+		//end****************************************
+		
+	});
+	
+	function selectUser(rowid){
+		//选中
+		if($($("#gridTable .cbox").get(rowid-1)).attr("checked")=="checked"){
+			var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+			var hasFlag = false;
+			//判断是否已经存在于select中
+			$('#selectUser option').each(function(){
+    			if($(this).val() == rowData.OPNO){
+    				hasFlag = true;
+    			}
+    		}); 
+			//添加到select列表中
+			if(!hasFlag){
+				$("#selectUser").append("<option value='"+rowData.OPNO+"'>"+rowData.OPNAME+"</option>"); 
+			}
+		}else{
+			//去掉
+			var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+			var hasFlag = false;
+			//判断是否已经存在于select中
+			$('#selectUser option').each(function(){
+    			if($(this).val() == rowData.OPNO){
+    				$("#selectUser option[value='"+rowData.OPNO+"']").remove(); 
+    			}
+    		}); 
+		}
+	}
+	//保存
+	function saveInfo(){
+		/*
+		if($('#selectUser option').size()==0){
+			$.uialert("请选择用户数据!");
+			return;
+		}
+		*/
+		
+		var ids = "";
+		
+		$('#selectUser option').each(function(){
+			ids = ids + $(this).val() + ",";
+		}); 
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.role!saveRoleUser"
+		$.hkajax(
+				url,
+				"ROLEID=#{ROLE_BEAN.get('ROLEID')}&OPNO="+ids,
+				{
+					success:function(data){
+						var result = data.result;
+						$.uimessage(result);
+						if(result.indexOf("成功")>0){
+	                		cancel();
+	                	}
+					}
+				});
+	}
+    </script>
+</head>
+<body>
+    <div class="ui-layout-center">
+	    <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+					操作员：
+					<input type="text" id="OPNO" name="OPNO">
+					操作员名：
+					<input type="text" id="OPNAME" name="OPNAME">
+					<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+				</form>
+				</div>
+				</fieldset>
+		</div>
+		<script type="text/javascript">
+				createSelectCondition();
+			</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="user">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+	        <div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+	        </div>
+		</div>
+    </div>
+    <select id="selectUser" name="selectUser" style="display: none;"></select>
+    <!-- 以下是按钮区域 -->
+	<div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="addBtn" onclick="saveInfo()"><span class="ui-icon ui-icon-check" style="float: left;"></span>确定</button>
+			<button id="cancelBtn" onclick="cancel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<!--   cas时本地是没有ts_op表的， update by zhoudc, 2014-01-22 <var name="selectUser" codesrcsql="select OPNO,(SELECT OPNAME FROM TS_OP WHERE OPNO=R.OPNO) OPNAME from TS_OPROLE R WHERE R.ROLEID='#{ROLE_BEAN.get('ROLEID')}'" codevisible="false"/> --><!-- 备注 -->
+	<var name="selectUser" codesrcsql="select OPNO, OPNO AS OPNAME from SSO.TS_OPROLE R WHERE R.ROLEID='#{ROLE_BEAN.get('ROLEID')}'" emptyoption="false" codevisible="false"/>
+<!--Form Setting End-->

@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = COMMON_ACTION+"sso.employee!popQueryEmp";
+    var selectedId = "#{BEAN.get('SELECTED_ID')}";
+    var maxSelected = "#{BEAN.get('MAX_SELECTED')}";
+	$(document).ready(function () {
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:10,
+					multiboxonly: true,
+					colModel: 
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						"", 
+						com.e9rj.platform.form.FormParseFacade.getSearchListString(MODEL_KEY)
+						)},
+			    	gridComplete: function () {
+		    			resizePopWindowGrid('gridTable','queryDiv,buttonDiv,heightDiv','contentDiv');
+		    			//默认选中处理
+			    		if(selectedId!=""){
+			    			$.each($("#gridTable tr:not(.jqgfirstrow)"),function(i,item){
+				    			var rowData = $("#gridTable").jqGrid("getRowData", i+1); 
+				    			$.each(selectedId.split(","),function(j,val){
+				    				if(rowData.EMPLOYEE_ID==val){
+				    					$($("#gridTable .cbox")[i]).attr("checked",true);
+				    					jQuery('#gridTable').jqGrid('setSelection',i+1);
+				    				}
+				    			})
+				    		});
+			    		}
+			    	},
+			    	loadComplete:function(){
+			    		resizePopWindowGrid('gridTable','queryDiv,buttonDiv,heightDiv','contentDiv');
+			        }
+				});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		$( "#buttonset" ).buttonset();
+		//end****************************************
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			$("#gridTable").jqGrid("setGridParam", {  
+	    		url: queryAction + "&" + $("#searchform").serialize() + "&TMP=" + new Date()
+			}).trigger("reloadGrid", [{page:1}]);   
+		});
+		
+		//关闭按钮
+		$("#closeBtn").click(function(){
+			closePop("empDialog");
+		});
+		
+		//确定按钮
+		$("#okBtn").click(setValue);
+	});
+	
+	
+	
+	//确认按钮事件
+	function setValue(){
+		//判断是否有选中专业 
+		var selectedId = getSelectedCheckbox("gridTable");
+		if(maxSelected!=-1){
+			if(selectedId.split(",").length > maxSelected){
+				$.uialert("最多只能选择" + maxSelected + "条记录!");
+				return;
+			}
+		}
+		
+		var empcode = "";
+		var name = "";
+		$.each(selectedId.split(","),function(i,item){
+			if(item!=""){
+				var rowData = $("#gridTable").jqGrid("getRowData", item); 
+				empcode += "," + rowData.EMPLOYEE_ID;
+				name += "," + rowData.EMPLOYEE_NAME;
+			}
+		});
+		if(empcode!=""){
+			empcode = empcode.substring(1);
+		}
+		if(name!=""){
+			name = name.substring(1);
+		}
+		//
+		if('#{BEAN.get("POP_SOURCE")}'=='TAB'){
+			var currTabId = getCurrTabId();
+			window.top.$("#"+currTabId).contents().find('#'+'#{BEAN.get("EMP_CODE_INPUT")}').val(empcode);
+			window.top.$("#"+currTabId).contents().find('#'+'#{BEAN.get("EMP_NAME_INPUT")}').val(name);
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				eval('window.top.$("#"+currTabId)[0].contentWindow.'+'#{BEAN.get("CALLBACK")}');
+			}
+		}else if('#{BEAN.get("POP_SOURCE")}'=='POP'){
+			// 弹出窗口
+			window.top.$("#topIframe").contents().find('#'+'#{BEAN.get("EMP_CODE_INPUT")}').val(empcode);
+			window.top.$("#topIframe").contents().find('#'+'#{BEAN.get("EMP_NAME_INPUT")}').val(name);
+			var empObj = new Object();
+			empObj.empcode = empcode;
+			empObj.empname = name;
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				eval('window.top.$("#topIframe")[0].contentWindow.'+'#{BEAN.get("CALLBACK")}(empObj)');
+			}
+		}else if('#{BEAN.get("POP_SOURCE")}'=='POP2'){
+			// 弹出窗口中的iframe
+			window.top.$("#courseSelectDialogIframe").contents().find('#'+'#{BEAN.get("EMP_CODE_INPUT")}').val(empcode);
+			window.top.$("#courseSelectDialogIframe").contents().find('#'+'#{BEAN.get("EMP_NAME_INPUT")}').val(name);
+			var empObj = new Object();
+			empObj.empcode = empcode;
+			empObj.empname = name;
+			//parent.empSelectCallback(empObj);
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				eval('window.top.$("#courseSelectDialogIframe")[0].contentWindow.'+'#{BEAN.get("CALLBACK")}(empObj)');
+				//eval('window.top.$("#topIframe")[0].$("#extendIframe")[0].contentWindow.'+'#{BEAN.get("CALLBACK")}(empObj)');
+			}
+		}else{
+			window.top.$("#"+"#{BEAN.get('POP_SOURCE')}").contents().find('#'+'#{BEAN.get("EMP_CODE_INPUT")}').val(empcode);
+			window.top.$("#"+"#{BEAN.get('POP_SOURCE')}").contents().find('#'+'#{BEAN.get("EMP_NAME_INPUT")}').val(name);
+		}
+		closePop("empDialog");
+	}
+	
+    </script>
+
+</head>
+<body>
+    <div class="ui-layout-center">
+   		<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+				<div>
+				<form id="searchform" onSubmit="return false" style="margin:0;">
+					<div style="float: left;">
+						<table>
+							#{com.e9rj.platform.form.FormParseFacade.getSearchConditionString(MODEL_KEY+'condition')}
+						</table>
+					</div>
+					<div style="float: left;">
+						<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+					</div>
+				</form>
+			</div>
+			</fieldset>
+		</div>
+		<script type="text/javascript">
+				createSelectCondition();
+			</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="paramGroup">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+		</div>
+    </div>
+    <div id="buttonDiv" style="position:absolute;bottom:3px;right:16px;">
+		<span id="buttonset">
+			<button id="okBtn"><span class="ui-icon ui-icon-check" style="float: left;"></span>确定</button>
+			<button id="closeBtn"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>
+		</span>
+    </div>
+    <div id="heightDiv" style="position: absolute;bottom:0px;height: 40px;"></div>
+</body>
+</html>
+<!--Form Setting Start-->
+#{com.e9rj.platform.form.FormParseFacade.getEditPageFormSettingString(MODEL_KEY+'condition','S')}
+<!--Form Setting End-->

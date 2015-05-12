@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=form.model";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=form.model";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=form.model";
+  	//树设置***start***
+    var setting = {
+    		view: {
+    			selectedMulti: false
+    		},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+    var zNodes,zTree;
+  	//树设置***end***
+	$(document).ready(function () {
+		//过滤按钮权限
+		//var auth = "#{RESOURCE_AUTH}";
+		//author(auth);
+		//加载树数据
+		loadTreeData();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		
+		$( "input:button, button", "div" ).button();
+
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'[{name:"TPLID",index:"TPLID",label:"主键",hidden:true},' +
+						'{name:"REMARK",index:"REMARK",label:"模板名称"},' +
+						'{name:"TPLNAME",index:"TPLNAME",label:"模板标识"},' +
+						'{name:"TBLTYPE",index:"TBLTYPE",label:"表名"},' +
+						'{name:"ACTTYPE",index:"ACTTYPE",label:"模板类型",hidden:true},' +
+						'{name:"ACTTYPE_NAME",index:"ACTTYPE_NAME",label:"模板类型"}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable",rowid);
+			    		var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+						var url = gotoAction + "&TPLID="+rowData.TPLID+"&TMP="+new Date();
+						popReadInfo(url,"查看模板信息",globalPopWidthLong,globalPopHeightLong);
+			    	},
+			    	gridComplete: function () {
+			    		$("#tableTree").height($(window).height()-82);
+			    	},
+			    	loadComplete:function(){
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    		$("#rightDiv").css("width",$(window).width()-$("#leftDiv").width());
+			    		resizeGrid('gridTable','queryDiv,queryDiv','contentDiv');
+			        	resetPage("gridPager");
+			        }
+				});
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');});
+		//判断分页设置
+		checkPager("gridTable");
+		$( "#buttonset" ).buttonset();
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+    		
+		});
+		
+		
+		//初始化树
+		zTree = $.fn.zTree.init($("#tableTree"), setting, zNodes);
+		zTree.expandAll(true);
+	});
+	//加载树数据
+	function loadTreeData(){
+		//加载树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type:'POST',  
+	        dataType : "json",  
+	        url: "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=form.metatable!queryTableByTree",//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	        }  
+	    });  
+	}
+	
+	function refreshTree(){
+		//重新加载树
+    	loadTreeData();
+    	var zTree = $.fn.zTree.init($("#tableTree"), setting, zNodes);
+    	zTree.refresh();
+    	//展开原来的节点
+    	//var pNode = zTree.getNodeByParam("id",$("#PARENTORGCODE").val());
+    	//if(pNode!=null && pNode!=""){
+    	//	zTree.expandNode(pNode, true, null, null);
+    	//}
+    	zTree.expandAll(true);
+	}
+	//点击树事件
+	function setTableInfo(tableCode,tableName){
+		$("#TBLTYPE").val(tableCode);
+		//$("#CONTEXTCODE").val(contextCode);
+		//$("#PORGNAME").html(orgName);
+		$("#searchBtn").click();
+	}
+	function closePopModel(){
+		closePop("popModel");
+	}
+	//确认按钮事件
+	function setValue(){
+		//判断是否有选中专业 
+		var selectedId = getSelectedCheckbox("gridTable");
+		var onlyOne = '#{BEAN.get("ONLY_ONE")}';
+		if(onlyOne=="true"){
+			if(selectedId.indexOf(",")>=0){
+				$.uialert("只能选择一条记录!");
+				return;
+			}
+		}
+		$("#okBtn").attr("disabled", true);
+		var modelCode = "";
+		$.each(selectedId.split(","),function(i,item){
+			if(item!=""){
+				var rowData = $("#gridTable").jqGrid("getRowData", item); 
+				modelCode += "," + rowData.TPLNAME;
+			}
+		});
+		if(modelCode!=""){
+			modelCode = modelCode.substring(1);
+		}
+		//
+		if('#{BEAN.get("POP_SOURCE")}'=='TAB'){
+			var currTabId = getCurrTabId();
+			window.top.$("#"+currTabId).contents().find('#'+'#{BEAN.get("CODE_INPUT")}').val(modelCode);
+			//window.top.$("#"+currTabId).contents().find('#'+'#{BEAN.get("NAME_INPUT")}').val(name);
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				eval('window.top.$("#"+currTabId)[0].contentWindow.'+'#{BEAN.get("CALLBACK")}');
+			}
+		}else if('#{BEAN.get("POP_SOURCE")}'=='POP'){
+			// 弹出窗口
+			window.top.$("#topIframe").contents().find('#'+'#{BEAN.get("CODE_INPUT")}').val(modelCode);
+			//window.top.$("#topIframe").contents().find('#'+'#{BEAN.get("NAME_INPUT")}').val(name);
+			var returnObj = new Object();
+			returnObj.modelCode = modelCode;
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				eval('window.top.$("#topIframe")[0].contentWindow.'+'#{BEAN.get("CALLBACK")}(returnObj)');
+			}
+		}else if('#{BEAN.get("POP_SOURCE")}'=='POPIFRAME'){
+			// 弹出窗口中的iframe
+			window.top.$("#topIframe").contents().find("#extendIframe").contents().find('#'+'#{BEAN.get("CODE_INPUT")}').val(schoolcode);
+			//window.top.$("#topIframe").contents().find("#extendIframe").contents().find('#'+'#{BEAN.get("NAME_INPUT")}').val(name);
+			var returnObj = new Object();
+			returnObj.modelCode = modelCode;
+			if('#{BEAN.get("CALLBACK")}'!=""){
+				//eval('window.top.$("#topIframe")[0].$("#extendIframe")[0].contentWindow.'+'#{BEAN.get("CALLBACK")}(returnObj)');
+			}
+		}else{
+			window.top.$('#'+"#{BEAN.get('POP_SOURCE')}").contents().find('#'+'#{BEAN.get("CODE_INPUT")}').val(schoolcode);
+			//window.top.$("#" + "#{ORG_BEAN.get("POP_SOURCE")}").contents().find('#'+'#{BEAN.get("NAME_INPUT")}').val(name);
+		}
+		
+		closePop("popModel");
+	}
+    </script>
+    <style type="text/css">
+    ul.ztree {width:250px;overflow-y:auto;overflow-x:auto;margin-top:5px;margin-left: 2px;}
+    </style>
+</head>
+<body class="demo-single">
+    <div class="ui-layout-center">
+    	<div id="leftDiv" style="float: left;padding-top: 5px;">
+    		<ul id="tableTree" class="ztree ui-widget-content ui-corner-all"></ul>
+    	</div>
+    	<div id="rightDiv" style="float: left;">
+	    	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+				<fieldset id="selectCondition" class="ui-corner-all">
+						<div>
+						<form id="searchform" onSubmit="return false" style="margin:0;">
+						表名：<select id="TBLTYPE" name="TBLTYPE" ></select>
+						模板标识：<input type="text" id="TPLNAME" name="TPLNAME">
+						<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+					</form>
+					</div>
+					</fieldset>
+			</div>
+			<script type="text/javascript">
+				createSelectCondition();
+			</script>
+			<!-- tabLogo的值必须全局唯一 -->
+			<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+				<table id="gridTable" class="ui-pg-table"></table>  
+		        <div id="gridPager" style="height: 36px"></div>
+			</div>
+    	</div>
+    </div>
+    <div style="position:absolute;width: 100%;border-bottom:0px;border-left:0px;border-right:0px;bottom:40px;font-size: 0px;" class="ui-widget-content"></div>
+	<div id="buttonDiv" style="position:absolute;bottom:0px;right:15px;">
+		<span id="buttonset">
+			<button id="okBtn" onclick="setValue()" ><span class="ui-icon ui-icon-check" style="float: left;"></span>确定</button>
+			<button id="cancelBtn" onclick="closePopModel()"><span class="ui-icon ui-icon-close" style="float: left;"></span>取消</button>		
+		</span>
+	</div>
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="TBLTYPE" value="TB_FIELD_BEAN.get('TBLTYPE')" codesrcsql="SELECT TABLECODE,TABLE_INFO FROM V_METATABLE" emptyoption="true" /><!-- -->
+<!--Form Setting End-->

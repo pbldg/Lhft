@@ -1,0 +1,376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<script type="text/javascript" src="/e9common/js/uitables.js"></script> 
+	<script src="/e9common/jquery/validate/js/languages/jquery.validationEngine-zh_CN.js" type="text/javascript"></script>
+	<script src="/e9common/jquery/validate/js/jquery.validationEngine.js" type="text/javascript"></script>
+	<!-- 验证 -->
+    <link rel="stylesheet" href="/e9common/jquery/validate/css/validationEngine.jquery.css" type="text/css"/>
+	
+	
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var actionUrl = "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=platform.codegen";
+    var genType = "";
+    var rootPath = "";
+    var webRootPath = "";
+    var webInfPath = "";
+    var srcPath = "";
+    var packagePath = "";
+    var alertFlag = true;
+    //验证变量
+    var validateForm = false;
+    var availableTags;
+	$(document).ready(function () {
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"none",
+				{
+					multiselect:false,
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						"codegen", 
+						'[{name:"TABLE_SCHEMA",index:"TABLE_SCHEMA",label:"数据库",width:"80px"},' +
+						'{name:"TABLE_NAME",index:"TABLE_NAME",label:"表名"},' +
+						'{name:"TABLE_KEY",index:"TABLE_KEY",label:"主键"},' +
+						'{name:"TABLE_COMMENT",index:"TABLE_COMMENT",label:"备注"}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    		getTableInfo();
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		resizeGrid('gridTable','queryDiv,buttonset','contentDiv',true);
+			    		$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#infoArea").height()-90);
+			    	}
+				});
+		
+		//resize绑定
+		$(window).bind('resize', function(){
+			resizeGrid('gridTable','queryDiv,buttonset,buttonset,buttonset','contentDiv',true);
+			$("#infoTableDiv").height(getOpenerFrameHeight(document) - $("#queryDiv").height() - $("#infoArea").height()-90);
+			
+		});
+		
+		//判断分页设置
+		checkPager("gridTable");
+		//把按钮拷到主页面
+		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
+		//初始化按钮事件
+		initBtn();
+		$( "#buttonset" ).buttonset();
+		
+		//样式微调
+		if($.browser.msie) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.opera) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.mozilla) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.safari) {
+			$("#tabId").css("margin-top","-3px");
+		}
+		//样式微调结束**********
+		//表格样式
+		$("#infoTable").styleTable();
+		$( "button", "td" ).button();
+		
+		//验证表单
+    	commonValidate("infoForm");
+		//表单提交
+		submitThisInfoForm("infoForm", actionUrl);
+		
+		var path = "#{SYSPATH}";
+		$("#M_PATH").val(path.replace("WebRoot\\",""));
+
+		/*
+   		$( "#M_PATH" ).click(function(){
+   			availableTags = $.unique(availableTags);
+   			aos = $( "#M_PATH" ).autocomplete({
+   	   			source: availableTags
+   	   		});
+   			$(aos).autocomplete('search', path.substring(0,1));
+   		});
+		*/
+   		$("#M_PACKAGE").dblclick(function(){
+   			$("#M_PATH").val($("#M_PATH").val() + parsePackage());
+   		});
+		      
+   		availableTags = [
+		         			path
+		         		];
+		var aos = $( "#M_PATH" ).autocomplete({
+			source: availableTags
+		});
+	});
+	function setPath(){
+		if(rootPath==""){
+			rootPath = $("#M_PATH").val();
+		}
+		
+	    webRootPath = rootPath + "WebRoot\\";
+	    webInfPath = rootPath + "WebRoot\\WEB-INF\\";
+	    srcPath = rootPath + "src\\";
+	}
+	//把包名转为路径 
+	function parsePackage(){
+		var pack = $("#M_PACKAGE").val();
+		while(pack.indexOf(".")>0){
+			pack = pack.replace("\.","\\");
+		}
+		return pack + "\\";
+	}
+    function getTableInfo(){
+    	rootPath = "";
+		var path = "#{SYSPATH}";
+		$("#M_PATH").val(path.replace("WebRoot\\",""));
+    	var selectedId = getSelectedCheckbox("gridTable");
+		if(!selectOne(selectedId))return;
+		var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+		$("#M_TABLENAME").val(rowData.TABLE_NAME);
+		$("#M_KEY").val(rowData.TABLE_KEY);
+		$("#M_BUSINESSKEY").val(rowData.TABLE_SCHEMA.toLowerCase()+"."+rowData.TABLE_NAME.toLowerCase());
+		$("#M_FUNCNO").val(rowData.TABLE_SCHEMA.toLowerCase()+"."+rowData.TABLE_NAME.toLowerCase());
+		$("#M_PACKAGE").val("com.e9rj."+rowData.TABLE_SCHEMA.toLowerCase()+"."+rowData.TABLE_NAME.toLowerCase());
+		$("#infoTable").find("tr:gt(0)").remove();
+		packagePath = parsePackage();
+		
+		var url = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=platform.codegen!getTableInfo&TABLE_NAME="+rowData.TABLE_NAME+"&SCHEMA="+$("#SCHEMA").val();
+		$.hkajax(url,"",{
+			success:function(data){
+				$.each(data.Rows,function(i,item){
+					var trStr = '<tr style="height: 25px;">'+
+					'<td align="center"><input type="checkbox" id="CON" name="CON" value="'+item.COLUMN_NAME+":"+(item.COLUMN_COMMENT==""?item.COLUMN_NAME:item.COLUMN_COMMENT)+'"></td>'+
+					'<td align="center"><input style="width: 90%" id="FIELDNAME" name="FIELDNAME" value="'+item.COLUMN_NAME+'"></td>'+
+					'<td align="center"><input style="width: 90%" id="CNNAME" name="CNNAME" value="'+(item.COLUMN_COMMENT==""?item.COLUMN_NAME:item.COLUMN_COMMENT)+'"></td>'+
+					'<td align="center"><input style="width: 90%" id="DATA" name="DATA"><input type="hidden" id="COL_LENGTH" name="COL_LENGTH" value="'+item.CHARACTER_MAXIMUM_LENGTH+'"/><input type="hidden" id="IS_NULLABLE" name="IS_NULLABLE" value="'+item.IS_NULLABLE+'"/></td>'+
+					'<td align="center"><button id="backupBtn" type="button" onclick="delRow(event)"><span class="ui-icon ui-icon-plus" style="float: left;"></span>删除</button></td>'+
+					'</tr>';
+					
+					$('#infoTable tr:last').after(trStr);
+			    	$("#infoTable").styleTable();
+			    	$("#infoTable td").css("padding","0px");
+					$( "button", "td" ).button();
+				});
+			}
+		});
+    }
+    function delRow(e){
+    	var actObj =  e.target  == document ? null : e.target;
+    	var actRow = $(actObj);
+    	
+    	while(actRow.get(0).tagName!="TR"){
+    		actRow = actRow.parent();
+    	}
+    	actRow.remove();
+    }
+    function addRow(){
+		var trStr = '<tr style="height: 25px;">'+
+			'<td align="center"><input type="checkbox" id="CON" name="CON"></td>'+
+			'<td align="center"><input style="width: 90%" id="FIELDNAME" name="FIELDNAME"></td>'+
+			'<td align="center"><input style="width: 90%" id="CNNAME" name="CNNAME"></td>'+
+			'<td align="center"><input style="width: 90%" id="DATA" name="DATA"><input type="hidden" id="COL_LENGTH" name="COL_LENGTH" value="1000"/><input type="hidden" id="IS_NULLABLE" name="IS_NULLABLE" value="YES"/></td>'+
+			'<td align="center"><button id="backupBtn" type="button" onclick="delRow(event)"><span class="ui-icon ui-icon-plus" style="float: left;"></span>删除</button></td>'+
+			'</tr>';
+    	$('#infoTable tr:last').after(trStr);
+    	$("#infoTable").styleTable();
+    	$("#infoTable td").css("padding","0px");
+		$( "button", "td" ).button();
+    }
+  //提交表单
+    function submitThisInfoForm(formid,url){
+    	$('#'+formid).submit(function(){
+            jQuery.ajax({
+                url: url,   // 提交的页面
+                data: "GENTYPE="+genType+"&"+$('#'+formid).serialize(), // 从表单中获取数据
+                type: "POST",                   // 设置请求类型为"POST"，默认为"GET"
+                dataType:"json",
+                beforeSend: function()          // 设置表单提交前方法
+                {
+                	//验证
+                    return validateForm;
+                },
+                error: function(request) {      // 设置表单提交出错
+                    $.uialert("表单提交出错，请稍候再试");
+                },
+                success: function(data) {
+                    var result = data.result;
+                    
+                    if(result.indexOf("失败")>0){
+                    	$.uialert(result);
+                    	return;
+                    }
+                    if(alertFlag){//这里主要用于处理在全部生成的时候会弹出多次成功
+                    	$.uialert(result);	
+                    }else{
+                    	if(result.indexOf("Service")>0)
+                    	$.uialert("生成成功");	
+                    }
+                	//window.top.$("#"+currTabId)[0].contentWindow.pDialog.dialog("close");
+                	if($("#CMD").val()=="A" && result.indexOf("成功")>0){
+                		$("#"+formid)[0].reset();
+                	}
+                }
+            });
+            return false;
+        });
+    }
+    //生成main
+    function genmain(){
+    	setPath();
+		var path = webInfPath + parsePackage() + $("#M_TABLENAME").val().toLowerCase()+"_main.html";
+		$("#M_PATH").val(path);
+    	availableTags[availableTags.length]=$("#M_PATH").val();
+    	genType="notabmain";
+    	$('#infoForm').submit();
+    }
+    //生成services
+    function genServices(){
+    	setPath();
+    	var servicePath = parsePackage();
+    	if(packagePath.indexOf(".service")<0){
+    		servicePath = servicePath + "service\\";
+    	}
+    	var path = srcPath + servicePath + $("#M_TABLENAME").val().toUpperCase()+"Service.java";
+		$("#M_PATH").val(path);
+    	availableTags[availableTags.length]=$("#M_PATH").val();
+    	var oldmain = $("#MAINFORM").val();
+    	var oldedit = $("#EDITFORM").val();
+    	var pack = $("#M_PACKAGE").val();
+    	while(pack.indexOf(".")>0){
+    		pack = pack.replace(".","/");
+    	}
+    	pack = pack.replace("services","form");
+    	if(oldmain==""){
+    		oldmain = pack+"/"+$("#M_TABLENAME").val().toLowerCase()+"_main.html";
+    	}
+    	if(oldedit==""){
+    		oldedit = pack+"/"+$("#M_TABLENAME").val().toLowerCase()+"_edit.html";
+    	}
+    	genType="services";
+		$("#MAINFORM").val(oldmain);
+		$("#EDITFORM").val(oldedit);
+		$('#infoForm').submit();
+    	/*
+    	$.uiprompt2("请输入以下信息：", "确认提示",oldmain,oldedit,
+  		      function(promptValue) {
+  				if(promptValue.trim()==''){ 
+  					$.uialert('请输入信息!');
+  					return false;
+  				}
+  				$("#MAINFORM").val(promptValue.split(",")[0]);
+  				$("#EDITFORM").val(promptValue.split(",")[1]);
+  				$('#infoForm').submit();
+  		      },
+  		      function() {
+  		        //取消
+  		      });
+    	*/
+    }
+  //生成edit页
+    function genEdit(){
+    	setPath();
+    	var path = webInfPath + parsePackage() + $("#M_TABLENAME").val().toLowerCase()+"_edit.html";
+		$("#M_PATH").val(path);
+    	availableTags[availableTags.length]=$("#M_PATH").val();
+    	genType="edit";
+    	$("#COLNUMS").val(2);
+		$('#infoForm').submit();
+    	/*原来需要提示生成的编辑页是一列还是二列，改为都生成2列
+    	$.uiprompt("请输入表格列数(填1或2)：(1表示编辑页只有一列，2表示显示2列,)", "确认提示",
+  		      function(promptValue) {
+  				if(promptValue.trim()==''){ 
+  					$.uialert('请输入信息!');
+  					return false;
+  				}
+  				$("#COLNUMS").val(promptValue);
+  				$('#infoForm').submit();
+  		      },
+  		      function() {
+  		        //取消
+  		      });
+    	*/
+    }
+    function genAll(){
+    	alertFlag = false;
+    	genmain();
+    	genEdit();
+    	genServices();
+    }
+    </script>
+</head>
+<body >
+		    <table id="tabId" style="padding:0;width:100%;height:100%;margin-left: -1px;">
+		<tr>
+			<td width="340" valign="top">
+				<!-- tabLogo的值必须全局唯一 -->
+				<div id="contentDiv"  tabLogo="codegen" style="padding-top: 10px;">
+					<table id="gridTable" class="ui-pg-table"></table>  
+			        <div id="gridPager" style="height: 36px"></div>
+				</div>
+			</td>
+			<td valign="top">
+			<form method="post" name="infoForm" id="infoForm">
+			<div id="infoArea" align="left">
+			<table style="width: 100%">
+				<tr style="">
+					<td align="right">路径：</td>
+					<td colspan="7">
+						<input style="width: 94%" type="text" id="M_PATH" name="M_PATH" data-validation-engine="validate[required]">
+						<input type="text" id="MAINFORM" name="MAINFORM" style="display: none;">
+						<input type="text" id="EDITFORM" name="EDITFORM" style="display: none;"> 
+						<input type="text" id="COLNUMS" name="COLNUMS" style="display: none;"> 
+					</td>
+				</tr>
+				<tr>
+					<td align="right">表名：</td>
+					<td><input type="text" id="M_TABLENAME" name="M_TABLENAME" data-validation-engine="validate[required]"></td>
+					<td align="right">主键：</td>
+					<td><input type="text" id="M_KEY" name="M_KEY" data-validation-engine="validate[required]"></td>
+					<td align="right">包：</td>
+					<td><input type="text" id="M_PACKAGE" name="M_PACKAGE" style="width: 200px;" value="com.e9rj"></td>
+				</tr>
+				<tr>
+					<td align="right">Business-Key：</td>
+					<td><input type="text" id="M_BUSINESSKEY" name="M_BUSINESSKEY" data-validation-engine="validate[required]"></td>
+					<td align="right">功能号：</td>
+					<td><input type="text" id="M_FUNCNO" name="M_FUNCNO" data-validation-engine="validate[required]"></td>
+					<td align="right">模拟数据：</td>
+					<td><input type="text" style="width: 200px;" id="M_DATACOUNT" name="M_DATACOUNT" data-validation-engine="validate[custom[integer]]">条</td>
+				</tr>
+			</table>
+			
+			
+			
+			</div>
+			<div id="infoTableDiv" style="overflow: auto;">
+				<table id="infoTable" style="width: 100%; " cellpadding="0" cellspacing="0" class="full">
+					<tr>
+						<th style="width: 10%">查询条件</th>
+						<th style="width: 30%">列名</th>
+						<th style="width: 30%">中文名</th>
+						<th style="width: 20%">数据</th>
+						<th style="width: 10%">操作</th>
+					</tr>
+				</table>
+			</div>
+			</form>
+			</td>
+		</tr>
+	</table>
+		<span id="buttonset">
+			<button id="notabmain" onclick="genmain();" style="width: 110px;display: none;"><span class="ui-icon ui-icon-plus" style="float: left;"></span>生成main</button>
+			<button id="edit" onclick="genEdit();" style="width: 110px;display: none;"><span class="ui-icon ui-icon-plus" style="float: left;"></span>生成edit</button>
+			<button id="services" onclick="genServices();" style="width: 139px;display: none;"><span class="ui-icon ui-icon-plus" style="float: left;"></span>生成Services</button>
+			<button id="all" onclick="genAll();" style="width: 110px;"><span class="ui-icon ui-icon-plus" style="float: left;"></span>生成代码</button>
+			<button id="backupBtn" style="width: 100px;" onclick="addRow()"><span class="ui-icon ui-icon-plus" style="float: left;"></span>添加行</button>
+			<button id="backupBtn" onclick='$("#infoForm")[0].reset();$("#infoTable").find("tr:gt(0)").remove();'><span class="ui-icon ui-icon-plus" style="float: left;"></span>重置</button>
+		</span>
+</body>
+</html>

@@ -1,0 +1,237 @@
+package $info.get('PACKAGE');
+
+import javax.servlet.http.HttpServletRequest;
+import com.e9rj.platform.common.Constants;
+import com.e9rj.platform.common.bean.UserBean;
+import com.e9rj.platform.common.services.BusinessServices;
+import com.xmzy.frameext.simpledb.DBDYDao;
+import com.xmzy.frameext.simpledb.DBDYPO;
+import com.xmzy.framework.context.ActionContext;
+import com.xmzy.frameext.business.service.annotate.Service;
+import org.apache.commons.lang.StringUtils;
+import com.xmzy.framework.service.MessageService;
+
+/** 
+* Title: 
+* Description: 
+* @Copyright: Copyright (c) 2013 
+* @Company: 
+* @author:  
+* @version: 1.0 
+*/
+@Service(name="$info.get('FUNCNO')",description="$info.get('CLASSNAME')")
+public class $info.get('CLASSNAME') extends BusinessServices {
+	// 判断是否是添加操作
+	private boolean isAdd = false;
+	
+	// 功能号
+	private static final String AUTH_FUNC_NO = "$info.get('FUNCNO')";
+	
+	// 表名
+	private static final String TABLE_NAME = "$info.get('TABLENAME')";
+	
+	// 主健
+	private static final String TABLE_KEY = "$info.get('KEY')";
+	
+	// 功能名称
+	private static final String FUNC_NAME = "功能名称";
+	@Override
+	public int init(ActionContext ac) throws Exception {
+		//checkAuth(ac,AUTH_FUNC_NO,ONE);
+		ac.setObjValue("tabLogo", AUTH_FUNC_NO);
+		ac.setStringValue("FORMNAME", "$info.get('MAINFORM')");
+		return CONST_RESULT_SUCCESS;
+	}
+
+	@Override
+	public int save(ActionContext ac) throws Exception {
+		userpo = ((UserBean) ac.getObjValue(SESSION_USER_BEAN));
+		HttpServletRequest request = ac.getHttpRequest();
+		DBDYPO po = new DBDYPO(TABLE_NAME,TABLE_KEY,request);
+		int result=0;
+		if(DBDYPO.CMD_A.equals(po.get("CMD"))){
+			result = insert(ac,po);
+		}else if(DBDYPO.CMD_U.equals(po.get("CMD"))){
+			result = update(ac,po);
+		}
+		
+		super.pid = po.get(TABLE_KEY).toString();
+		
+		if(result==0){
+			setMessage(ac,MessageService.getMessage("MSG_SAVE_FAILURE", FUNC_NAME));
+			//写日志
+			super.log(ac, LOGLEVEL_W, Constants.SYS_SYSTEM_TYPE, po.getTableName(), pid, isAdd ? INSERT : UPDATE, MessageService.getMessage("MSG_SAVE_FAILURE", FUNC_NAME));
+			return CONST_RESULT_ERROR;
+		}else{
+			setMessage(ac,MessageService.getMessage("MSG_SAVE_SUCCESS", FUNC_NAME));
+			//写日志
+			super.log(ac, LOGLEVEL_I, Constants.SYS_SYSTEM_TYPE, po.getTableName(), pid, isAdd ? INSERT : UPDATE, MessageService.getMessage("MSG_SAVE_SUCCESS", FUNC_NAME));
+		}
+		return CONST_RESULT_AJAX;
+	}
+	
+	private int insert(ActionContext ac,DBDYPO po) throws Exception{
+		//新增操作
+		//checkAuth(ac,AUTH_FUNC_NO,TWO);
+		isAdd = true;
+		setAddInfo(ac, po);
+		po.set(TABLE_KEY, super.genIdString("P", KEY_LENGTH_TWENTY));
+		return DBDYDao.insert(ac.getConnection(), po);
+	}
+	
+	private int update(ActionContext ac,DBDYPO po) throws Exception{
+		//checkAuth(ac,AUTH_FUNC_NO,FOUR);
+		setUpdateInfo(ac, po);
+		if(!checkKeyUpdate(ac.getHttpRequest(),po)){
+			//有修改主键
+			return saveWithKeyUpdate(ac, null, po);
+		}else{
+			//没有修改主键
+			return DBDYDao.update(ac.getConnection(), po);
+		}	
+	}
+
+	@Override
+	public int query(ActionContext ac) throws Exception {
+		//checkAuth(ac,AUTH_FUNC_NO,ONE);
+		userpo = ((UserBean) ac.getObjValue(SESSION_USER_BEAN));
+		#if($info.get('DATACOUNT')=='0')
+			
+		StringBuffer sql = new StringBuffer();
+		//查询条件##
+		#foreach($con in $conList)
+			
+		String $con.CONKEYVAR = request.getParameter("$con.CONKEY");##
+		#end
+		
+		sql.append("SELECT * FROM $info.get('TABLENAME') WHERE 1=1");
+		#foreach($con in $conList)
+			
+		if(StringUtils.isNotEmpty($con.CONKEYVAR)){
+			sql.append(" AND $con.CONKEY LIKE '%").append($con.CONKEYVAR).append("%'");
+		}
+		#end
+		
+		//以下为排序
+		sql.append(super.order(ac, "", ""));
+		super.querySql = sql.toString();
+		#else
+			
+		//模拟数据
+		List<DBDYPO> dataList = new ArrayList<DBDYPO>();##
+		
+			
+		DBDYPO tp = new DBDYPO(TABLE_NAME,TABLE_KEY);##
+		#foreach($data in $dataList)
+		#if($velocityCount==1)
+		#foreach($field in $data.getFieldList())
+			
+		tp.set("$field","$data.get("$field")");##
+		#end
+		#end
+		#end
+		#foreach($data in $dataList)
+			
+		dataList.add(tp);##
+		#end
+		
+		String jsonString = FastJsonUtil.DBDYPOList2JsonString(dataList);
+		ac.getHttpResponse().getWriter().print(jsonString);
+		//模拟数据完成
+		#end
+		
+		return CONST_RESULT_AJAX;
+	}
+
+	@Override
+	public int delete(ActionContext ac) throws Exception {
+		//checkAuth(ac,AUTH_FUNC_NO,EIGHT);
+		userpo = ((UserBean) ac.getObjValue(SESSION_USER_BEAN));
+		String key = ac.getHttpRequest().getParameter(TABLE_KEY);
+		String keys[] = null;
+		if(key != null){
+			keys = key.split(",");
+		}
+		if(keys!=null){
+			for(String k:keys){
+				if("".equals(k)){
+					continue;
+				}
+				po = new DBDYPO(TABLE_NAME, TABLE_KEY);
+				po.set(TABLE_KEY, k);
+				
+				int result = DBDYDao.delete(ac.getConnection(), po);
+				if(result == 0){
+					setMessage(ac, "删除出错，请稍候再试");
+					
+					//日志
+					super.log(ac, LOGLEVEL_W, Constants.SYS_SYSTEM_TYPE, po.getTableName(), k, DELETE, MessageService.getMessage("MSG_SAVE_FAILURE", FUNC_NAME));
+					return CONST_RESULT_ERROR;
+				}
+				//日志
+				super.log(ac, LOGLEVEL_I, Constants.SYS_SYSTEM_TYPE, po.getTableName(), k, DELETE, MessageService.getMessage("MSG_SAVE_SUCCESS", FUNC_NAME));
+			}
+		}
+		
+		//清空缓存
+		setMessage(ac, "删除成功");
+		
+		return CONST_RESULT_AJAX;
+	}
+
+	@Override
+	public int goTo(ActionContext ac) throws Exception {
+		userpo = ((UserBean) ac.getObjValue(SESSION_USER_BEAN));
+		String cmd = ac.getHttpRequest().getParameter("CMD");
+		DBDYPO po = new DBDYPO(TABLE_NAME, TABLE_KEY, ac.getHttpRequest());
+		
+		if("TAB".equals(cmd)){
+			//以下代码用于tab页，没有tab页的可以删除
+			String tabid = ac.getHttpRequest().getParameter("TABID");
+			po.set("TABID", tabid);
+			if(!StringIsNullOrEmpty(tabid)){
+				ac.setStringValue("FORMNAME", "$info.get('TABFORM')");
+			}
+			
+			ac.setObjValue("$info.get('TABLENAME')_BEAN", po);
+			return CONST_RESULT_SUCCESS;
+		}
+		ac.setObjValue("tabLogo", AUTH_FUNC_NO);
+		String key = ac.getHttpRequest().getParameter(TABLE_KEY);
+		ac.setStringValue("FORMNAME", "$info.get('EDITFORM')");
+		
+		// 新增
+		if (key == null || "".equals(key)) {
+			//checkAuth(ac,AUTH_FUNC_NO,2);
+			po.setCmd(DBDYPO.CMD_A);
+		}else{
+			//跳转到修改
+			if("read".equals(ac.getStringValue(CONST_RESOURCEAUTH))){
+				//checkAuth(ac,AUTH_FUNC_NO,ONE);
+			}else{
+				//checkAuth(ac,AUTH_FUNC_NO,FOUR);
+			}
+			po = DBDYDao.selectByID(ac.getConnection(), po)[0];
+        	#foreach($data in $dataList)
+        	#if($velocityCount==1)
+        	#foreach($field in $data.getFieldList())
+        	po.set("$field","$data.get("$field")");##
+        	#end
+        	#end
+        	#end
+			
+			po.setCmd(DBDYPO.CMD_U);
+		}
+		
+		ac.setObjValue("$info.get('TABLENAME')_BEAN", po);
+		return CONST_RESULT_SUCCESS;
+	}
+
+	@Override
+	public int insertExportData(ActionContext ac) throws Exception {
+		// TODO Auto-generated method stub
+		return 1;
+	}
+
+
+}

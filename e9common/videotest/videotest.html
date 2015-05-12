@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+  <!-- Chang URLs to wherever Video.js files will be hosted -->
+  <script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+  
+  <!-- videojs开始*********************** -->
+  <link href="http://localhost:8080/e9common/players/video-js/video-js.css" rel="stylesheet" type="text/css">
+  <!-- video.js must be in the <head> for older IEs to work. -->
+  <script src="http://localhost:8080/e9common/players/video-js/video.dev.js"></script>
+  <!-- videojs结束*********************** -->
+  
+  <!-- tn3开始****************** -->
+  <!-- include CSS always before including js -->
+  <link type="text/css" rel="stylesheet" href="/e9common/players/tn3/skins/tn3/tn3.css"></link>
+  <!-- include tn3 plugin -->
+  <script type="text/javascript" src="/e9common/players/tn3/js/jquery.tn3lite.min.js"></script>
+  <!-- <script type="text/javascript" src="/e9common/players/tn3/js/tn3lite.js"></script> -->
+  <!-- tn3结束**************************** -->
+  
+  <!-- swfplayer开始************* -->
+  <script type="text/javascript" src="/e9common/players/swfplayer/js/swfobject/swfobject.js"></script>
+  <script type="text/javascript" src="/e9common/players/swfplayer/js/flexpaper_flash.js"></script>
+  <!-- swfplayer结束************* -->
+  
+  <!-- jwplayer开始************ -->
+  <script type="text/javascript" src="/e9common/players/jwplayer/jwplayer.js"></script>
+  <script type="text/javascript" src="/e9common/players/jwplayer/jwplayer.html5.js"></script>
+  <!-- jwplayer结束************** -->
+  <script src="http://localhost:8080/e9common/players/mediaplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/swfplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/picplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/jwplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/wmvplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/pptplayer.js"></script>
+  <script src="http://localhost:8080/e9common/players/player.js"></script>
+   <script>
+   String.prototype.endsWith = function(suffix) {
+       return this.indexOf(suffix, this.length - suffix.length) !== -1;
+   };
+   var eInterval;
+   var p;
+   function startPlayer(settings){
+	   p = new player(settings);
+	   $("#mediaDiv").html("");
+	   p.initPlayer("mediaDiv");
+	   p.load();
+	   p.play();
+   }
+   function beforePlay(play){
+   }
+   function endPlay(play){
+   }
+   $(document).ready(function(){
+    	$("div[section]").click(function(){
+    		var fileurl = $(this).attr("fileurl");
+    		var imageurl = $(this).attr("imageurl");
+    		var desc = $(this).attr("desc");
+    		var mediatype = $(this).attr("mediatype");
+    		var ccurl = $(this).attr("ccurl");
+    		var settings = {
+    			    id : "playid",//播放器ID
+   				    type : mediatype,//播放文件类型，media视频,swf文档,pic图片集
+   				    width : 600,//播放器宽度
+   				    height : 450,//播放器高度
+   				    preload : "auto",//是否自动播放（只对视频有效）
+   				    loop : true,//循环播放
+   				    fileurl : fileurl,//播放文件地址（如果是多个图片，中间用,号隔开
+   				    //nextfileurl : "/e9common/videotest/video/2.mp4",//下一个播放文件地址
+   				    imageurl : imageurl,//预览图地址（如果是多个图片，中间用,号隔开
+   				    //nextimageurl : "",
+   				    desc : desc,//图片描述，多个用,号隔开
+   				    //nextdesc : "",
+   				    beforePlay : beforePlay,//播放开始前事件
+   				    endPlay : endPlay,//播放结束后事件
+   				    ccurl : ccurl,//字幕地址（只对视频有效
+   				    //nextccurl : "/e9common/videotest/demo.captions.vtt"//字幕地址（只对视频有效
+    		}
+    		startPlayer(settings);
+    	});
+    });
+    function findNextMediaName(currentSection){
+    	var nextSection = parseInt(currentSection)+1;
+    	return $("div[section='"+nextSection+"']").attr("src");
+    }
+   
+    function pause(){
+		p.pause();
+		alert(p.currentTime());
+    }
+    function play(){
+    	p.play();
+    }
+    function play2(){
+    	 document.getElementById("playid").play()
+    }
+    function clearDiv(){
+    	$("#mediaDiv").html("");
+    }
+    function reload(){
+    	p.stop();
+    }
+  </script>
+  <style type="text/css">
+  	.selectedDiv{
+  		background: red;
+  	}
+  	.normalDiv{
+		cursor: pointer;
+  	}
+  </style>
+</head>
+<body>
+<div class="normalDiv" section="1" style="float: left;" mediatype="media" fileurl="rtmp://192.168.3.107:1935/media/customlesson/test/2.mp4" imageurl="http://video-js.zencoder.com/oceans-clip.png">第一节</div>
+<div class="normalDiv" section="2" style="float: left;" mediatype="media" fileurl="/e9common/videotest/video/2.mp4" exerciseTime="2" imageurl="http://video-js.zencoder.com/oceans-clip.png" ccurl="/e9common/videotest/demo.captions.vtt">第二节*</div>
+<div class="normalDiv" section="3" style="float: left;" mediatype="swf" fileurl="/e9common/players/swfplayer/ar09_eng.swf">第三节</div>
+<div class="normalDiv" section="4" style="float: left;" mediatype="pic" fileurl="/e9common/videotest/pic/1_b.jpg,/e9common/videotest/pic/2_b.jpg,/e9common/videotest/pic/3_b.jpg,/e9common/videotest/pic/4_b.jpg" imageurl="/e9common/videotest/pic/1_s.jpg,/e9common/videotest/pic/2_s.jpg,/e9common/videotest/pic/3_s.jpg,/e9common/videotest/pic/4_s.jpg" desc="title1,title2,title3,title4">第四节</div>
+<div class="normalDiv" section="5" style="float: left;" mediatype="flv" fileurl="rtmp://192.168.3.114:1935/e9/zhoudaocheng.mp4" imageurl="http://video-js.zencoder.com/oceans-clip.png">第五节</div>
+<div class="normalDiv" section="6" style="float: left;" mediatype="wmv" fileurl="/e9common/videotest/video/oceans-clip.mp4" imageurl="http://video-js.zencoder.com/oceans-clip.png">第六节</div>
+<div class="normalDiv" section="7" style="float: left;" mediatype="ppt" fileurl="/e9common/e9slide/e9slide.html">第七节</div>
+<div id="mediaDiv" class="normalDiv" style="clear: both;">
+	<iframe src="/e9common/e9slide/e9slide.html" style="width:800px;height:600px;"></iframe>
+</div>
+<div>
+	<input value="">
+	<input type="button" value="暂停" onclick="pause()">
+	<input type="button" value="播放" onclick="play()">
+	<input type="button" value="播放2" onclick="play2()">
+	<input type="button" value="清空" onclick="clearDiv()">
+	<input type="button" value="test" onclick="test()">
+</div>
+</body>
+</html>

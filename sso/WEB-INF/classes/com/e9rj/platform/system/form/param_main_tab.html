@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+	$(document).ready(function () {
+		//author(auth);
+		$.grid(
+				"gridTable",
+				"HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.param&GROUPID=#{PARAM_BEAN.get('GROUPID')}",
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'['+
+						'{name:"CNO",index:"CNO",label:"参数号",width:5,align:"center"},' +
+						'{name:"CNAME",index:"CNAME",label:"参数名",width:15},' +
+						'{name:"CVALUE",index:"CVALUE",label:"参数值",width:35},' +
+						'{name:"ORDIDX",index:"ORDIDX",label:"排序索引",width:5,align:"center"},' +
+						'{name:"REMARK",index:"REMARK",label:"参数说明",width:40}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		selectCheckbox("gridTable",rowid);
+			    		var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+						var url = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.param&CNO="+rowData.CNO+"&TMP="+new Date();
+						popReadInfo(url,"查看参数信息",600,450);
+			    	},
+			    	gridComplete: function () {
+			    	},
+			    	loadComplete:function(){
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    		resizeGrid('gridTable','queryDiv','contentDiv',true);
+			        	resetPage("gridPager");
+			        }
+				});
+		
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv',true)});
+		
+		//判断分页设置
+		checkPager("gridTable");
+	   	
+		//把按钮拷到主页面
+		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
+		//初始化按钮事件
+		initBtn();
+	});
+    
+    </script>
+</head>
+<body >
+    <div id="contentDiv" tabLogo="#{tabLogo}">
+		<table id="gridTable"></table>  
+        <div id="gridPager" style="height: 36px"></div>
+		<span id="buttonset">
+			<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="updateBtn" rightval="4"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>修改</button>
+			<button id="readBtn" rightval="1"><span class="ui-icon ui-icon-newwin" style="float: left;"></span>查看</button>
+			<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+		</span>
+    </div>
+</body>
+</html>

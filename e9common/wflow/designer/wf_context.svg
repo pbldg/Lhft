@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width='100%' height='100%' version="1.1" xmlns='http://www.w3.org/2000/svg' xmlns:xlink="http://www.w3.org/1999/xlink" onload='g_init(evt);' onselectstart='return false;'  onmousedown='g_mouseDown(evt);' onmousemove='g_mouseMove(evt);' onmouseup='g_mouseUp(evt);'>
+
+<title>工作流程设计器</title> 
+	<desc>
+		A nice little demo of drag-and-drop functionality in SVG,written by Doug Schepers on February 16, 2004. Use or misuse this code however you wish.
+		<script>
+			var g_js_num=6;
+		</script>
+		<script type="text/javascript" xlink:href="../js/boot.js"/>
+		<script type="text/javascript" xlink:href="js/svg.js"/>
+	</desc>
+
+	<rect id='g_tmp_rect_1' x='1' y='1' width='99%' height='99%' style="fill:none;stroke:blue;stroke-width:5;opacity:0.5" pointer-events='auto'/>
+	<rect id='g_tmp_rect_2' x='100' y='100' width='50' height='50' display="none" style="fill:none;stroke:red;stroke-width:1;"/>
+
+	<text id="g_tmp_text_1" fill="#FFFFFF" stroke="black" x="10" y="26">元素列表</text>
+	<text id="g_tmp_text_0" fill="#FFFFFF" stroke="black" x="100" y="30" style='display:none;'></text>
+
+	<line id='g_tmp_line_1' stroke='blue' stroke-width='1' x1='80' x2 ='80' y1='1' y2='99%'/>
+	<line id='g_tmp_line_2' stroke='blue' stroke-width='1' x1='1' x2 ='80' y1='40' y2='40'/>
+	
+	<g id="wf_d_0"  onclick="createNewGraph('wf_d_0')" style="cursor:pointer;">
+		<image id='wf_d_img_0' x="30" y="60" width="32" height="32"  xlink:href="img/skin-0/wf_d_0.png"/>
+		<text   x='20' y='105' style='font-size:12px;font-weight:bold;' pointer-events='none'>任意一人</text>
+	</g>
+	<g id="wf_d_1"  onclick="createNewGraph('wf_d_1')" style="cursor:pointer;">
+		<image id='wf_d_img_1'  x="30" y="130" width="32" height="32" xlink:href="img/skin-0/wf_d_1.png"/>
+		<text   x='20' y='175' style='font-size:12px;font-weight:bold;' pointer-events='none'>多人并行</text>
+	</g>
+	<g id="wf_d_2"  onclick="createNewGraph('wf_d_2')" style="cursor:pointer;" >
+		<image id='wf_d_img_2'  x="30" y="200" width="32" height="32" xlink:href="img/skin-0/wf_d_2.png"/>
+		<text   x='20' y='245' style='font-size:12px;font-weight:bold;' pointer-events='none'>多人顺序</text>
+	</g>
+	<g id="wf_d_3"  onclick="createNewGraph('wf_d_3')" style="cursor:pointer;">
+		<image id='wf_d_img_3'  x="30" y="270" width="28" height="28" xlink:href="img/skin-0/wf_d_3.png"/>
+		<text   x='25' y='315' style='font-size:12px;font-weight:bold;' pointer-events='none'>结果线</text>
+	</g>
+	<g id="wf_d_4"  onclick="createNewGraph('wf_d_4')" style="cursor:pointer;">
+		<image id='wf_d_img_4'  x="35" y="340" width="16" height="16" xlink:href="img/skin-0/wf_d_4.png"/>
+		<text   x='25' y='375' style='font-size:12px;font-weight:bold;' pointer-events='none'>后续线</text>
+	</g>
+
+</svg>

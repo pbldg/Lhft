@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript" src="/e9common/jquery/ui/i18n/jquery.ui.datepicker-zh-CN.js"></script>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.log";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.log";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.log";
+    var excelaction = "HttpChannel?action=EXPORT_EXCEL_ACTION&BUSINESS_TYPE=sys.log";
+    
+	$(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		
+		$( "input:button, button", "div" ).button();
+
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"gridPager",
+				{
+					rowNum:#{com.e9rj.platform.common.BaseConstants.getGlobalValue("505","20")},
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'[{name:"LOGLEVEL",index:"LOGLEVEL",label:"日志级别",align:"center",width:"60px"},' +
+						'{name:"LOGTYPE",index:"LOGTYPE",label:"日志分类",align:"center",width:"60px"},' +
+						'{name:"OPNAME",index:"OPNAME",label:"操作员名",align:"center",width:"60px"},' +
+						'{name:"OPTIME",index:"OPTIME",label:"操作时间",width:"100px",formatter:"date",formatoptions:{srcformat: "Y-m-d H:i:s", newformat: "Y-m-d H:i:s"},align:"center"},' +
+						'{name:"LOGIP",index:"LOGIP",label:"操作IP",align:"center",width:"60px"},' +
+						'{name:"CONTENTS",index:"CONTENTS",label:"内容"}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    	},
+			    	gridComplete: function () {
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    		resizeGrid('gridTable','queryDiv','contentDiv');
+			    	}
+				});
+		//resize绑定
+		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');});
+		//判断分页设置
+		checkPager("gridTable");
+		$( "#buttonset" ).buttonset();
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		
+		$( "#OPTIME_BEG" ).datepicker();
+		$( "#OPTIME_BEG" ).val(curDate())
+		$( "#OPTIME_END" ).datepicker();
+		$( "#OPTIME_END" ).val(curDate());
+		
+	});
+	function curDate(){
+		var d = new Date();
+		return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); 
+	}
+	//打印数据
+	function export2Excel(key){
+		url = excelaction+"&EXCEL_KEY="+key+"&"+$("#searchform").serialize();
+		location.href=url;
+	}
+    </script>
+</head>
+<body class="demo-single">
+
+    <div class="ui-layout-center">
+        <!-- Begin demo markup -->
+	    <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+			<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+					<table>
+						<tr>
+							<td>开始时间：</td>
+							<td><input type="text" id="OPTIME_BEG" name="OPTIME_BEG" style="width: 100px;">
+									<SELECT id="BeginHour" name="BeginHour" style="width:60px;">
+										<SCRIPT language="javascript">
+									          for(var i=0;i<=23;i++){
+									            if(i<10)
+												document.write('<option value="0'+i+'">0'+i+'</option>');
+												else document.write('<option value="'+i+'">'+i+'</option>');
+											  }
+										</SCRIPT>
+									</SELECT>
+									:
+									<SELECT id="BeginMinute" name="BeginMinute" style="width:60px;">
+										<SCRIPT language="JavaScript" type="text/javascript">
+										          for(var i=0;i<=59;i++){
+										            if(i<10)
+													document.write('<option value="0'+i+'">0'+i+'</option>');
+													else document.write('<option value="'+i+'">'+i+'</option>');
+												  }
+										</SCRIPT>
+									</SELECT>
+									:
+									<SELECT id="BeginSecond" name="BeginSecond" style="width:60px;">
+										<SCRIPT language="JavaScript" type="text/javascript">
+									          for(var i=0;i<=59;i++){
+									            if(i<10)
+												document.write('<option value="0'+i+'">0'+i+'</option>');
+												else document.write('<option value="'+i+'">'+i+'</option>');
+											  }
+									      </SCRIPT>
+									</SELECT>
+							</td>
+							<td>日志级别：</td>
+							<td>
+								<select id="LOGLEVEL" name="LOGLEVEL" style="width: 156px;">
+									<option value=""></option>
+								</select>
+							</td>
+							<td rowspan="3"><button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button></td>
+						</tr>
+						<tr>
+							<td>结束时间：</td>
+							<td><input type="text" id="OPTIME_END" name="OPTIME_END" style="width: 100px;">
+									<SELECT id="EndHour" name="EndHour" style="width:60px;">
+										<SCRIPT language="javascript">
+									          for(var i=0;i<23;i++){
+									            if(i<10)
+												document.write('<option value="0'+i+'">0'+i+'</option>');
+												else document.write('<option value="'+i+'">'+i+'</option>');
+											  }
+										</SCRIPT>
+									    <OPTION selected value="23">
+											23
+										</OPTION>										
+									</SELECT>
+									:
+									<SELECT id="EndMinute" name="EndMinute" style="width:60px;">
+										<SCRIPT language="JavaScript" type="text/javascript">
+										          for(var i=0;i<59;i++){
+										            if(i<10)
+													document.write('<option value="0'+i+'">0'+i+'</option>');
+													else document.write('<option value="'+i+'">'+i+'</option>');
+												  }
+										</SCRIPT>
+									    <OPTION selected value="59">
+											59
+										</OPTION>										
+									</SELECT>
+									:
+									<SELECT id="EndSecond" name="EndSecond" style="width:60px;">
+										<SCRIPT language="JavaScript" type="text/javascript">
+									          for(var i=0;i<59;i++){
+									            if(i<10)
+												document.write('<option value="0'+i+'">0'+i+'</option>');
+												else document.write('<option value="'+i+'">'+i+'</option>');
+											  }
+									      </SCRIPT>
+									    <OPTION selected value="59">
+											59
+										</OPTION>
+									</SELECT>
+							</td>
+							<td>日志分类：</td>
+							<td>
+								<select id="LOGTYPE" name="LOGTYPE" style="width: 156px;">
+									<option value=""></option>
+								</select>
+							</td>							
+						</tr>
+						<tr>
+							<td align="right">内容：</td>
+							<td><input type="text" id="CONTENTS" name="CONTENTS" style="width: 96%"></td>
+							<td>操作员名：</td>
+							<td><input type="text" id="OPNAME" name="OPNAME" style="width: 146px;"></td>
+						</tr>
+					</table>
+				</form>
+				</div>
+				</fieldset>
+		</div>
+		<script type="text/javascript">
+			createSelectCondition();
+		</script>
+		<!-- tabLogo的值必须全局唯一 -->
+		<div id="contentDiv" style="padding:0;width:100%;height:100%;margin-top: 2px;margin-left: 2px;" tabLogo="#{tabLogo}">
+			<table id="gridTable" class="ui-pg-table"></table>  
+	        <div id="gridPager" style="height: 36px"></div>
+	        <div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+				<span id="buttonset">
+					<button id="exportBtn" rightval="2" style="width: 120px;" onclick="export2Excel('sys.log')"><span class="ui-icon ui-icon-plus" style="float: left;"></span>导出excel</button>
+				</span>
+	        </div>
+		</div>
+    </div>
+</body>
+</html>
+<!--Form Setting Start-->
+	<var name="LOGLEVEL" codesrcsql="select CNO,CVALUE from TS_CODE where CATEGORYNO='LOGLEVEL'" codevisible="right"/>
+	<var name="LOGTYPE" codesrcsql="select CNO,CVALUE from TS_CODE where CATEGORYNO='LOGTYPE'" codevisible="false"/>
+<!--Form Setting End-->

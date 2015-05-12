@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!-- 配置文件  -->
+<Config xmlns="http://app/action" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://app/action DefAction.xsd">
+	<Action id="INIT_ACTION">
+		<Description>进入主页面action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginConnWithNoTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.InitAction" onOtherDo="next" on0Do="error" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>			
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>
+			<ActionDestination method="form" return_code="2">com/e9rj/platform/common/form/ajaxshowmessage.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="WEBSITE_COMMON_ACTION">
+		<Description>WEBSITE 通用action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CommonAction" onOtherDo="next" on0Do="4" isresult="true"/>		
+			<ActionStep id="3" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>		
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>	
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="COMMON_ACTION">
+		<Description>通用action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.CommonAction" onOtherDo="next" on0Do="5" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>		
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>	
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="WEBSITE_ACTION">
+		<Description>通用 网页action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginConnWithNoTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CommonAction" onOtherDo="next" on0Do="3" isresult="true"/>		
+			<ActionStep id="3" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>		
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>	
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="WEBSITE_T_ACTION">
+		<Description>通用网页有事务action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CommonAction" onOtherDo="next" on0Do="4" isresult="true"/>		
+			<ActionStep id="3" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>		
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>	
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="SAVE_ACTION">
+		<Description>业务保存action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="5" isresult="true"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.SaveAction" onOtherDo="next" on0Do="5" on99Do="5" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+			<ActionDestination method="form" return_code="0">com/e9rj/platform/common/form/goto.html</ActionDestination>
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="QUERY_ACTION">
+		<Description>业务查询action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginConnWithNoTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.QueryAction" onOtherDo="next" on0Do="4" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>	
+		
+	<Action id="GOTO_ACTION">
+		<Description>业务 跳转action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginConnWithNoTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.GoToAction" onOtherDo="4" on1Do="next" on0Do="error" isresult="true"/>
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>			
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/goto.html</ActionDestination>
+		</PresentationConfig>		
+	</Action>	
+	
+	<Action id="DEL_ACTION">
+		<Description>业务删除action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.DeleteAction" onOtherDo="next" on0Do="5" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>	
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>		
+	</Action>	
+
+	<Action id="DOWNLOADFILE_ACTION">
+		<Description>文件下载action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.DownloadFileAction" onOtherDo="next" on0Do="error" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+		</PresentationConfig>
+	</Action>	
+
+	<Action id="WEBSITE_DOWNLOADFILE_ACTION">
+		<Description>文件下载action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.DownloadFileAction" onOtherDo="next" on0Do="error" isresult="true"/>		
+			<ActionStep id="3" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="EXPORT_EXCEL_ACTION">
+		<Description>导出excel-action</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.Export2ExcelAction" onOtherDo="next" on0Do="error" isresult="true"/>		
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.RollbackAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+			<ActionDestination method="form" return_code="*">com/e9rj/platform/common/form/ajaxshowmessage.html</ActionDestination>
+		</PresentationConfig>		
+	</Action>	
+	 
+	 <Action id="SHOW_SYS_INFO">
+		<Description>显示系统信息</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.e9rj.platform.common.action.Show_Sys_Action" onOtherDo="next" isresult="true" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+			<ActionDestination method="form" return_code="1">com/e9rj/platform/common/form/showsys.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="INITMEMORYPARM">
+		<Description>重新初始系统参数</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error" />
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.InitMemoryParm" onOtherDo="next" on0Do="error" />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+	</Action>
+	
+	<!-- 这个是用在下拉框联动方面，作为参考，现在没有地方使用到 -->
+	<Action id="SELECT_ACTION">
+		<Description>取select数据</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.EndConnWithNoTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginConnWithNoTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.common.action.CheckUserInfo" onOtherDo="next" on0Do="error"/>
+			<ActionStep id="3" classname="com.e9rj.platform.common.action.SelectAction" onOtherDo="next" on0Do="5" isresult="true"/>		
+			<ActionStep id="5" classname="com.xmzy.frameext.simpledb.action.EndConnWithNoTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>		
+			<ActionDestination method="forward" return_code="0">main/error.jsp</ActionDestination>		
+			<ActionDestination method="ajax" return_code="88"></ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="USER_LOGIN_FIRST">
+		<Description>用户登录检查</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.e9rj.platform.system.action.UserLoginFirstAction" on1Do="next" isresult="true" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+			<ActionDestination method="forward" return_code="1">default.jsp</ActionDestination>
+			<ActionDestination method="redirect" return_code="2">HttpChannel?action=PLATFORM_MAIN_ACTION</ActionDestination>
+			<ActionDestination method="redirect" return_code="3">default.jsp</ActionDestination>
+		</PresentationConfig>
+	</Action>
+	
+	<Action id="USER_LOGOUT">
+		<Description>用户退出登录</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.xmzy.frameext.simpledb.action.BeginTrans" on1Do="next" onOtherDo="error" />
+			<ActionStep id="2" classname="com.e9rj.platform.system.action.UserLogoutAction" on1Do="next" isresult="true" />
+			<ActionStep id="3" classname="com.e9rj.platform.system.action.GetUrlAction" on1Do="next"  />
+			<ActionStep id="4" classname="com.xmzy.frameext.simpledb.action.CommitAndEndTrans" on1Do="return" onOtherDo="error" />
+		</ActionParam>
+
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>			
+			<ActionDestination method="forward" return_code="1">default.jsp</ActionDestination>
+			<ActionDestination method="forward" return_code="2">index.jsp</ActionDestination>
+			<ActionDestination method="forward" return_code="3">main/error.jsp</ActionDestination>
+		</PresentationConfig>
+	</Action>
+</Config>

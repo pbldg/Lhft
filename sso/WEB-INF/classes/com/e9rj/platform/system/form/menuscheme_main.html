@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	<customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <link rel="stylesheet" href="/e9common/jquery/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css">
+	<script type="text/javascript" src="/e9common/jquery/ztree/js/jquery.ztree.all-3.2.min.js"></script>
+	<script type="text/javascript" src="/e9common/js/ztreecommon.js"></script>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.menuscheme";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.menuscheme";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.menuscheme";
+    
+  //树设置
+    var setting = {
+    		check: {
+				enable: true
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+	var zNodes;
+	
+	$(document).ready(function () {
+		//过滤按钮权限
+		var auth = "#{RESOURCE_AUTH}";
+		author(auth);
+		//加载树数据
+		loadTreeData();
+		//$('body').layout();
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//按钮样式		
+		$( "input:button, button", "div" ).button();
+		
+		// 配置jqGrid组件  
+		//初始化表格.grid(gridid,url,param,pagerid, options)
+		$.grid(
+				"gridTable",
+				queryAction,
+				$("#searchform").serialize(),
+				"",
+				{
+					multiselect: false,
+					colModel:
+						#{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
+						tabLogo, 
+						'[{name:"SCHID",index:"SCHID",label:"菜单ID",width:150,hidden:true},' +
+						'{name:"SCHNAME",index:"SCHNAME",label:"菜单名称"},' +
+						'{name:"ISDEFAULT",index:"ISDEFAULT",label:"是否默认",width:"80",align:"center"},' +
+						'{name:"REMARK",index:"REMARK",label:"备注"}' +
+						']'
+						)},
+			    	onSelectRow:function(rowid){
+			    		//取布局数据
+			    		getLayoutData()
+			    	},
+			    	ondblClickRow:function(rowid,iRow,iCol,e){
+			    		var rowData = $("#gridTable").jqGrid("getRowData", rowid);  
+						var url = gotoAction + "&SCHID="+rowData.SCHID+"&TMP="+new Date();
+						popReadInfo(url,"查看信息",globalPopWidth,globalPopHeightTinny);
+			    	},
+			    	gridComplete: function () {
+			    		//设置菜单
+			    		setContextMenu("gridTable","contentDiv");
+			    			
+			    		resizeGrid('gridTable','queryDiv','contentDiv');
+						$("#menuTree").height($("#contentDiv").height()-45);
+						
+						
+					    var rowIds = $("#gridTable").jqGrid('getDataIDs');   
+					    if(rowIds){   
+					        for(var i = 0, j = rowIds.length; i < j; i++) {   
+					            var curRowData = $("#gridTable").jqGrid('getRowData', rowIds[i]);   
+					            if(curRowData.ISDEFAULT=="是"){
+					            	jQuery('#gridTable').jqGrid('setSelection',rowIds[i],false); 
+					            	//取布局数据
+						    		getLayoutData();
+					            }
+					        }   
+					    }  
+			    	},
+			    	onSortCol:function(index,iCol,sortorder){
+			    		//排序
+			    	}
+				});
+		//resize绑定
+		$(window).bind('resize', function(){
+			resizeGrid('gridTable','queryDiv','contentDiv');
+			$("#menuTree").height($("#contentDiv").height()-40);
+			});
+		//判断分页设置
+		checkPager("gridTable");
+		
+		$( "#buttonset" ).buttonset();
+		//end****************************************
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+    		
+		});
+		
+		//新增按钮
+		$("#addBtn").click(function(){
+			var url = gotoAction + "&TMP="+new Date();
+			popSaveInfo(url,"新增信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//修改按钮
+		$("#updateBtn").click(function(){
+			
+			
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+	        
+	        
+	        var url = gotoAction + "&SCHID="+rowData.SCHID+"&TMP="+new Date();
+	        popSaveInfo(url,"修改信息",globalPopWidth,globalPopHeightTinny);
+	        
+		});
+		
+		//查看按钮
+		$("#readBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+			var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+			var url = gotoAction + "&SCHID="+rowData.SCHID+"&TMP="+new Date();
+			popReadInfo(url,"查看信息",globalPopWidth,globalPopHeightTinny);
+		});
+		
+		//删除按钮
+		$("#delBtn").click(function(e){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(selectedId==""){
+				$.uialert("请选择数据!");
+				return;
+			}
+			deleteInfo(e,selectedId);
+		});
+		
+		//删除操作
+		function deleteInfo(e,rowid){
+			var rows = rowid.split(",");
+			var ids = "";
+			jQuery.each(rows, function() {
+				var rowData = $("#gridTable").jqGrid("getRowData", this);  
+				ids = ids + rowData.SCHID + ",";
+			});
+			$.uiconfirm("确定要删除吗？", "确认提示",
+		      function() {
+				var url = delAction + "&SCHID="+ids;
+				//commonDelete(url);
+				$.hkajax(
+						url,//请求的action路径  
+						"",
+				        {
+					        success:function(data){ //请求成功后处理函数。    
+					        	//zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+					        	$("#searchBtn").click();
+					            var result = data.result;
+					            $.uimessage(result);
+					            if(result.indexOf("成功")>0){
+					            	var zTree = $.fn.zTree.getZTreeObj("menuTree");
+					        		zTree.checkAllNodes(false);
+					            }
+					        }  
+				        });  
+		      },
+		      function() {
+		        //取消删除
+		      });
+		}
+		
+		//初始化树
+		$.fn.zTree.init($("#menuTree"), setting, zNodes);
+		setCheck();
+		$( "#treeBtn" ).buttonset();
+		$("#expandBtn").bind("click", {type:"expandAll"}, expandNode);
+		$("#collapseBtn").bind("click", {type:"collapseAll"}, expandNode);
+		$("#saveBtn").bind("click", saveLayoutData);
+		//样式微调
+		if($.browser.msie) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.opera) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.mozilla) {
+			$("#tabId").css("margin-top","-2px");
+		}else if($.browser.safari) {
+			$("#tabId").css("margin-top","-3px");
+		}
+		//样式微调结束**********
+		
+	});
+	
+	//加载树数据
+	function loadTreeData(){
+		//加载普通树
+		$.hkajax(
+				"HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.menu&TREETYPE=",//请求的action路径  
+				"",
+		        {
+			        success:function(data){ //请求成功后处理函数。    
+			        	zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+			        }  
+		        });  
+	}
+	//展开/关闭节点
+	function expandNode(e) {
+		var zTree = $.fn.zTree.getZTreeObj("menuTree"),
+		type = e.data.type,
+		nodes = zTree.getSelectedNodes();
+		if (type.indexOf("All")<0 && nodes.length == 0) {
+			$.uialert("请先选择一个父节点");
+		}
+
+		if (type == "expandAll") {
+			zTree.expandAll(true);
+		} else if (type == "collapseAll") {
+			zTree.expandAll(false);
+		} else {
+			var callbackFlag = $("#callbackTrigger").attr("checked");
+			for (var i=0, l=nodes.length; i<l; i++) {
+				zTree.setting.view.fontCss = {};
+				if (type == "expand") {
+					zTree.expandNode(nodes[i], true, null, null, callbackFlag);
+				} else if (type == "collapse") {
+					zTree.expandNode(nodes[i], false, null, null, callbackFlag);
+				} else if (type == "toggle") {
+					zTree.expandNode(nodes[i], null, null, null, callbackFlag);
+				} else if (type == "expandSon") {
+					zTree.expandNode(nodes[i], true, true, null, callbackFlag);
+				} else if (type == "collapseSon") {
+					zTree.expandNode(nodes[i], false, true, null, callbackFlag);
+				}
+			}
+		}
+	}
+	//设置checkbox
+	function setCheck() {
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		zTree.setting.check.chkboxType = { "Y" : "ps", "N" : "ps" };
+	}
+	//取布局数据
+	function getLayoutData(){
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		zTree.checkAllNodes(false);
+		var selectedId = getSelectedCheckbox("gridTable");
+		var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+		//var url = queryAction + "&SCHID="+rowData.SCHID+"&DATA=LAYOUT&TMP="+new Date();
+		$.hkajax(
+	        "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.menuscheme!queryLayout",//请求的action路径  
+	        "&SCHID="+rowData.SCHID+"&TMP="+new Date(),
+	        {
+		        success:function(data){ //请求成功后处理函数。    
+		        	
+		        	$.each(data.Rows,function(i,val){
+		        		var node = zTree.getNodeByParam("id",val.ITEMNO);
+		        		if(node!=null && !node.isParent){
+		        			zTree.checkNode(node, true, true);
+		        		}
+		        	});
+		        	//默认展开第一层
+		    		expandFirstLevel("menuTree","all");
+		        }  
+	        });  
+	}
+	function getMenuObject(){
+		
+	}
+	//保存布局数据
+	function saveLayoutData(){
+		var selectedId = getSelectedCheckbox("gridTable");
+		if(selectedId==null || selectedId==""){
+			return;
+		}
+		var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+		
+		var zTree = $.fn.zTree.getZTreeObj("menuTree");
+		var nodes = zTree.getCheckedNodes(true);
+		var ids = "";
+		$.each(nodes,function(i,val){
+			//if(!val.getCheckStatus().half){
+				ids = ids + "," + val.id;
+			//}
+		})
+		if(ids!=""){
+			ids = ids.substring(1);
+		}
+		$.hkajax(
+		        "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.menuscheme!saveLayout",//请求的action路径  
+		        "SCHID="+rowData.SCHID+"&ITEMNO="+ids,
+		        {
+			        success:function(data){ //请求成功后处理函数。    
+			        	$.uimessage(data.result);
+			        }  
+		        });  
+	}
+    </script>
+    <style type="text/css">
+    ul.ztree {width:99%;overflow-y:auto;overflow-x:auto;}
+    </style>
+</head>
+<body>
+	<div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+		<fieldset id="selectCondition" class="ui-corner-all">
+			<div>
+				<form id="searchform" onSubmit="return false" style="margin:0;">
+					菜单名称：
+					<input type="text" style="display: none;" id="DISBUG" name="DISBUG">
+					<input type="text" id="SCHNAME" name="SCHNAME">
+					<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+				</form>
+			</div>
+		</fieldset>
+	</div>
+	<script type="text/javascript">
+		createSelectCondition();
+	</script>
+	<table id="tabId" style="padding:0;width:100%;height:100%;margin-left: -1px;">
+		<tr>
+			<td width="340">
+				<!-- tabLogo的值必须全局唯一 -->
+				<div id="contentDiv"  tabLogo="#{tabLogo}">
+					<table id="gridTable" class="ui-pg-table"></table>  
+			        <div id="gridPager" style="height: 36px"></div>
+				</div>
+			</td>
+			<td valign="top">
+				<span id="treeBtn">
+					<button id="expandBtn"><span class="ui-icon ui-icon-folder-open" style="float: left;"></span>展开</button>
+					<button id="collapseBtn"><span class="ui-icon ui-icon-folder-collapsed" style="float: left;"></span>折叠</button>
+					<button id="saveBtn" style="width: 110px;"><span class="ui-icon ui-icon-check" style="float: left;"></span>保存布局</button>
+				</span>
+				<ul id="menuTree" class="ztree ui-widget-content ui-corner-all" style="margin-top:3px;"></ul>
+			</td>
+		</tr>
+	</table>
+	<div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;">
+		<span id="buttonset" >
+			<button id="addBtn" rightval="2"><span class="ui-icon ui-icon-plus" style="float: left;"></span>新增</button>
+			<button id="updateBtn" rightval="4"><span class="ui-icon ui-icon-pencil" style="float: left;"></span>修改</button>
+			<button id="readBtn" rightval="1"><span class="ui-icon ui-icon-newwin" style="float: left;"></span>查看</button>
+			<button id="delBtn" rightval="8"><span class="ui-icon ui-icon-trash" style="float: left;"></span>删除</button>
+		</span>
+	</div>
+</body>
+</html>

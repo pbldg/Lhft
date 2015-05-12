@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Insert title here</title>
+  <!-- Chang URLs to wherever Video.js files will be hosted -->
+  <script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+  <link href="http://localhost:8080/e9common/video-js/video-js.css" rel="stylesheet" type="text/css">
+  <!-- video.js must be in the <head> for older IEs to work. -->
+  <script src="http://localhost:8080/e9common/video-js/video.js"></script>
+   <script>
+    function setupVideo() {
+        // You will probably get your video name differently
+        var videoName = "http://video-js.zencoder.com/oceans-clip.mp4";
+
+        // Get all of the uri's we support
+        var indexOfExtension = videoName.lastIndexOf(".");
+        //window.alert("found index of extension " + indexOfExtension);
+        var extension = videoName.substr(indexOfExtension, videoName.length - indexOfExtension);
+        //window.alert("extension is " + extension);
+        var ogguri = encodeURI(videoName.replace(extension, ".ogv"));
+        var webmuri = encodeURI(videoName.replace(extension, ".webm"));
+        var mp4uri = encodeURI(videoName.replace(extension, ".mp4"));
+        //window.alert(" URI is " + webmuri);
+
+
+        // Get the video element
+        var v = document.getElementById("media");
+        //window.alert(" media is " + v);
+
+        // Test for support
+        if (v.canPlayType("video/ogg")) {
+             v.setAttribute("src", ogguri);
+            window.alert("can play ogg");
+        }
+        else if (v.canPlayType("video/webm")) {
+            v.setAttribute("src", webmuri);
+            window.alert("can play webm");
+        }
+        else if (v.canPlayType("video/mp4")) {
+            v.setAttribute("src", mp4uri);
+            window.alert("can play mp4");
+        }
+        else {
+            window.alert("Can't play anything");
+        }
+
+       v.load();
+       v.play();
+   }
+  </script>
+</head>
+<body onload="setupVideo();">
+    <video id="media" controls="true" preload="auto" src="">
+    </video>
+</body>
+</html>

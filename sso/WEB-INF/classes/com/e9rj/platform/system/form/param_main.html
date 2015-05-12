@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Insert title here</title>
+	
+    <customtag var="getform" delegation="com.xmzy.frameext.form.tag.GetFormFileTag" src="com/e9rj/platform/common/form/include.html"/>
+    <script type="text/javascript">
+    var pDialog;//用于弹窗
+    var gridHeight=0;//必须要，用于计算grid高度
+    
+    var queryAction = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.param";
+    var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.param";
+    var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=sys.param";
+	//过滤按钮权限
+	var auth = "#{RESOURCE_AUTH}";
+	$(document).ready(function () {
+		//主题切换
+		addThemeSwitcher('head',{ top: '0px', right: '0px' });
+		//tab组件初始化
+		if($("#contentTabs").html()!=null){
+			$( "#contentTabs").tabs({
+				ajaxOptions: {
+					error: function( xhr, status, index, anchor ) {
+						$( anchor.hash ).html(
+							"加载出错" );
+					}
+				}
+			});
+			//移去tabs的ui-widget-header样式
+			$( "#contentTabs > ul").removeClass("ui-widget-header");
+			$( "#contentTabs > ul").addClass("ui-widget-content");
+			$(".ui-tabs-panel").css("padding","0").css("padding-top","2px");
+		}
+
+		$( "input:button, button", "div" ).button();
+		
+		//tab点击事件
+		$('#contentTabs').bind('tabsselect', function(event, ui) {
+			   $("#buttons").append($("#buttonset"));
+			   var pan = $(".ui-tabs-panel");
+			   for(var i=0;i<pan.length;i++){
+		    		pan.html("");
+		       }
+			   //注意：以下代码针对当前业务逻辑
+			   $("#GROUPID").get(0).selectedIndex=ui.index;
+		});
+		//当参数分组改变时，改变选中的tab页
+		$("#GROUPID").change(function(){
+			$('#contentTabs').tabs('select', $("#GROUPID").get(0).selectedIndex);
+		});
+	});
+	function initBtn(){
+		$( "#buttonset" ).buttonset();
+		
+		//查询按钮
+		$("#searchBtn").click(function(){
+			commonQuery(queryAction,"gridTable","searchform","searchBtn");   //(10)重新载入Grid表格  
+		});
+		
+		//新增按钮
+		$("#addBtn").click(function(){
+			var url = gotoAction + "&GROUPID=" + $("#GROUPID").val() + "&TMP="+new Date();
+			popSaveInfo(url,"新增参数信息",globalPopWidth,globalPopHeight);
+		});
+		
+		//修改按钮
+		$("#updateBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+	        var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+	        
+	        var url = gotoAction + "&CNO="+rowData.CNO+"&TMP="+new Date();
+	        popSaveInfo(url,"修改参数信息",globalPopWidth,globalPopHeight);
+	        
+		});
+		
+		//查看按钮
+		$("#readBtn").click(function(){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(!selectOne(selectedId))return;
+			var rowData = $("#gridTable").jqGrid("getRowData", selectedId);  
+			var url = gotoAction + "&CNO="+rowData.CNO+"&TMP="+new Date();
+			popReadInfo(url,"查看参数信息",globalPopWidth,globalPopHeight);
+		});
+		
+		//删除按钮
+		$("#delBtn").click(function(e){
+			var selectedId = getSelectedCheckbox("gridTable");
+			if(selectedId==""){
+				$.uialert("请选择数据!");
+				return;
+			}
+			deleteInfo(e,selectedId);
+		});
+		//删除操作
+		function deleteInfo(e,rowid){
+			var rows = rowid.split(",");
+			var ids = "";
+			jQuery.each(rows, function() {
+				var rowData = $("#gridTable").jqGrid("getRowData", this);  
+				ids = ids + rowData.CNO + ",";
+			});
+			$.uiconfirm("确定要删除吗？", "确认提示",
+		      function() {
+				var url = delAction + "&CNO="+ids;
+				commonDelete(url);
+		      },
+		      function() {
+		        //取消删除
+		      });
+		}
+	}
+	
+    </script>
+</head>
+<body class="demo-single">
+
+    <div class="ui-layout-center">
+            <!-- Begin demo markup -->
+            <div id="queryDiv" style="border:0;padding:0;padding-top:3px;overflow:hidden;" class="ui-widget-content ui-widget">
+				<fieldset id="selectCondition" class="ui-corner-all">
+					<div>
+					<form id="searchform" onSubmit="return false" style="margin:0;">
+						参数号：
+						<input type="text" id="CNO" name="CNO">
+						参数名：
+						<input type="text" id="CNAME" name="CNAME">
+						参数组：
+						<select id="GROUPID" style="width: 150px;" name="GROUPID">
+						</select>
+						<button id="searchBtn" type="button"><span class="ui-icon ui-icon-search" style="float: left;"></span>查询</button>
+					</form>
+				</div>
+				</fieldset>
+			</div>
+			<script type="text/javascript">
+				createSelectCondition();
+			</script>
+
+			<div id="contentTabs" >
+				<ul>
+					@foreach{paramgroup : PARAMGROUP_LIST}
+						<LI label="#{paramgroup.get('GROUPNAME')}">
+							<A href="HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=sys.param&CMD=Q&GROUPID=#{paramgroup.get('GROUPID')}">
+								@{paramgroup.get('GROUPNAME')}
+							</A>
+						</LI>
+					@end{}
+				</ul>
+			</div>
+			<div id="buttonDiv" style="position:absolute;bottom:10px;left:6px;"></div>
+    </div>
+</body>
+</html>
+<!--Form Setting Start-->
+<var name="GROUPID" codesrcsql="select GROUPID,GROUPNAME from ts_paramgroup order by ordidx" codevisible="false"/>
+<!--Form Setting End-->

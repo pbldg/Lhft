@@ -1,0 +1,71 @@
+﻿/*!
+ * jQuery UI Datepicker 的时间部分的样式
+ */
+ 
+/* 菜单选择框 DIV */
+.menuSel{
+	z-index:1;
+	position:absolute;
+	background-color:#F0F8FF;	
+	border:#ccc 2px solid;
+	width: 120px;
+	display:none;
+}
+/* 菜单的样式 TD */
+.menu{
+	cursor:pointer;
+	background-color:#F0F8FF;
+}
+/* 菜单的mouseover样式 TD */
+.menuOn{
+	cursor:pointer;
+	background-color:#00CED1;
+}
+/* 菜单无效时的样式 TD */
+.invalidMenu{
+	color:#aaa;
+}
+
+ /* 时选择框的位置 DIV */
+.hhMenu{
+	margin-top:-75px; 
+	margin-left:26px;
+}
+/* 分选择框的位置 DIV */
+.mmMenu{
+	margin-top:-44px; 
+	margin-left:26px;
+}
+/* 秒选择框的位置 DIV */
+.ssMenu{
+	margin-top:-28px; 
+	margin-left:26px;
+}
+
+/* 时间输入框 INPUT */
+.dpTime input{
+	width:18px;
+	height:20px;
+	text-align:center;
+	border:#ccc 1px solid;	
+}
+/* 时间 时 INPUT */
+.dpTime .tB{
+	border-right:0px;
+}
+/* 时间 分和间隔符 ':' INPUT */
+.dpTime .tE{
+	border-left:0;
+	border-right:0;
+}
+/* 时间 分 INPUT */
+.dpTime .tm{
+	width:7px;
+	border-left:0;
+	border-right:0;
+} 
+/* 时间 秒 INPUT */
+.dpTime .tS{
+	width:17px;
+	border-left:0; 
+} 

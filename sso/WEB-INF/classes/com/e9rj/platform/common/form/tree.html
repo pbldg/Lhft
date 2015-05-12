@@ -1,0 +1,60 @@
+		<!-- ztree相关 -->
+		<link rel="stylesheet" href="/e9common/jquery/ztree3.5/css/zTreeStyle/zTreeStyle.css" type="text/css" />
+		<script type="text/javascript" src="/e9common/jquery/ztree3.5/js/jquery.ztree.all-3.5.min.js"></script>
+		<script type="text/javascript" src="/e9common/jquery/ztree3.5/js/jquery.ztree.exhide-3.5.min.js"></script>
+		<!-- ztree相关结束 -->
+		<style type="text/css">
+	    	ul.ztree {width:250px;overflow-y:auto;overflow-x:auto;margin-top:5px;margin-left: 2px;}
+	    </style>
+<script type="text/javascript">
+	//树设置***start***
+	var setting = {
+			view: {
+				selectedMulti: false
+			},
+			data: {
+				simpleData: {
+					enable: true
+				}
+			}
+		};
+	var zNodes,zTree;
+	//树设置***end***
+	function initTree(treeId){
+		//初始化树
+		zTree = $.fn.zTree.init($("#"+treeId), setting, zNodes);
+	}
+	//加载树数据
+	function loadTreeData(url,callback){
+		//加载树
+		$.ajax({  
+	        async : false,  
+	        cache:false,  
+	        type:'POST',  
+	        dataType : "json",  
+	        url: url,//请求的action路径  
+	        error: function () {//请求失败处理函数  
+	            alert('请求失败');  
+	        },  
+	        success:function(data){ //请求成功后处理函数。    
+	            zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+	            if(callback){
+	            	callback(data);
+	            }
+	        }  
+	    });  
+	}
+	
+	function refreshTree(id){
+		//重新加载树
+    	loadTreeData();
+    	var zTree = $.fn.zTree.init($("#"+id), setting, zNodes);
+    	zTree.refresh();
+    	//展开原来的节点
+    	//var pNode = zTree.getNodeByParam("id",$("#PARENTORGCODE").val());
+    	//if(pNode!=null && pNode!=""){
+    	//	zTree.expandNode(pNode, true, null, null);
+    	//}
+    	zTree.expandAll(true);
+	}
+</script>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>$title</title>
+    <style type="text/css">
+		.ui-jqgrid tr.jqgrow td{
+			text-overflow:ellipsis;
+			overflow:hidden;
+			word-wrap:normal;
+			white-space:nowrap !important;
+		}
+  	</style>
+   
+</head>
+<body class="demo-single" >
+	<div>
+	请选择年：
+	<select id="YEAR" name="YEAR" onchange="getData()"></select>
+	</div>
+	<div id="report" style="overflow-y: auto !important; overflow-x:hidden;min-width: 680px;">
+		<div class="row">
+			<div style="float: left;width: 100%;min-width: ">
+				<div id="chart1" style="margin-left:10px;margin-bottom: 20px;width:0px; height:300px;"></div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+$(document).ready(function(){
+	var d = new Date();
+	var year = d.getYear()+1900;
+	var month = d.getMonth()+1;
+	 for(var i = year;i > 2010;i--){
+		 var op = "<option value='" + i + "'>" + i +"</option>"
+		 $("#YEAR").append(op);
+	 }
+	 getData();
+});
+	function getData(){
+	var year = $("#YEAR").val();
+	var month = $("#MONTH").val();
+	 var url ="HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=sys.logincount!getData&YEAR=" + year;
+	  $.hkajax(url,"",{
+		 success:function(data){
+			 $("#chart1").html("");
+			  var plot1 = $.jqplot('chart1',[data],{
+			      title: year + '年登录人数统计',
+			      animate: true,
+			      width:$(window).width()-20,
+			        animateReplot: true,
+			        series:[
+			                {
+			                    pointLabels: {
+			                        show: true
+			                    }
+			                },
+			                {
+			                    rendererOptions: {
+			                        animation: {
+			                            speed: 1000
+			                        }
+			                    }
+			                }
+			            ],
+			        axes: {
+		                xaxis: {
+		                    tickRenderer: $.jqplot.CanvasAxisTickRenderer,
+		                    ticks: ["1","2","3","4","5","6","7","8","9","10","11","12"]
+		                }
+		            }
+			    	  
+			  });
+		 } 
+	  });
+	}
+</script>
+</html>
+<!--Form Setting Start-->
+<!--Form Setting End-->

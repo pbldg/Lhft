@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!-- 配置文件  -->
+<Config xmlns="http://app/action" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://app/action DefAction.xsd">
+
+	<Action id="GET_VALIDATENUM">
+		<Description>显示验证码</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.e9rj.cas.validatenum.Gen_ValidateNum_Action" onOtherDo="next" isresult="true" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="forward" return_code="error">main/error.jsp</ActionDestination>
+		</PresentationConfig>
+	</Action>
+
+	<Action id="VERIFY_VALIDATENUM">
+		<Description>验证验证码</Description>
+		<ErrorAction>com.xmzy.frameext.simpledb.action.RollbackAndEndTrans</ErrorAction>
+		<ActionContext>
+		</ActionContext>
+		<ActionParam>
+			<ActionStep id="1" classname="com.e9rj.cas.validatenum.Verify_ValidateNum_Action" onOtherDo="next" isresult="true" />
+		</ActionParam>
+		<PresentationConfig>
+			<ActionDestination method="form" return_code="*">com/e9rj/cas/validatenum/showmessage.html</ActionDestination>
+		</PresentationConfig>
+	</Action>
+</Config>

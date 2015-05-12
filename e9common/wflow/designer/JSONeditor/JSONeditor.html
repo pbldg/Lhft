@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+	<head>
+	<script type="text/javascript" src="/e9common/jquery/js/jquery-1.7.2.min.js"></script>
+	<script src="JSONeditor.js"></script>
+	<link rel="stylesheet" type="text/css" href="/e9common/jquery/css/jquery-ui-1.8.21.custom.css" />
+	<script type="text/javascript" src="/e9common/jquery/js/jquery-ui-1.8.22.custom.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="/e9common/css/base.css" />
+	<script type="text/javascript" src="/e9common/js/uiwindow.js"></script>
+		<script>
+			onload=function(){
+				JSONeditor.start('tree','jform',true,true)
+				Opera=(navigator.userAgent.toLowerCase().indexOf("opera")!=-1)
+				Safari=(navigator.userAgent.toLowerCase().indexOf("safari")!=-1)
+				Explorer=(document.all && (!(Opera || Safari)))
+				Explorer7=(Explorer && (navigator.userAgent.indexOf("MSIE 7.0")>=0))
+					
+				if(Explorer7 && location.href.indexOf("file:")!=0){prompt("This is just to get input boxes started in IE7 - who deems them unsecure.","I like input boxes...")}
+				jsoninput.jvalue.value=JSON.stringify(parent.jsonData_workflow);
+				treeBuilder.jsonChange(jsoninput);
+				
+				$( "input:button" ).button();
+			}
+		</script>
+	</head>
+	<body>
+		<table width="100%">
+			<tr valign="top">
+				<td width="60%">
+					<div id="tree"></div>
+				</td>
+				<td width="40%">
+					<input  type='button' onclick='parent.reDrawWorkFlowGraph();treeBuilder.jsonChange(jsoninput);$.uialert("加载完成!");return false;' value='根据JSON数据画流程图'/>
+					<div id="jform" style="width: 100%;height: 80%"></div>
+				</td>
+			</tr>
+		</table>		
+	</body>
+</html>
