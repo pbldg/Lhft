@@ -52,7 +52,9 @@
 			    		resizeGrid('gridTable','queryDiv','contentDiv');
 			    	}
 		});
-		//resize绑定
+	    jQuery("#gridTable").setGridParam().hideCol("F_ID").trigger("reloadGrid");
+
+	    //resize绑定
 		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');}).trigger('resize');
 		
 		//判断分页设置
