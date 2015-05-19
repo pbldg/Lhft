@@ -6,11 +6,11 @@ import com.e9rj.platform.common.services.BusinessServices;
 import com.xmzy.frameext.business.service.annotate.Service;
 import com.xmzy.framework.context.ActionContext;
 
-@Service(name="back.index")
+@Service(name="back.tab")
 public class TabService extends BusinessServices {
 	
 	//功能号
-	private static final String AUTH_FUNC_NO = "back.index";
+	private static final String AUTH_FUNC_NO = "back.tab";
 
 	/**
 	 * 打开tab_main主页面
