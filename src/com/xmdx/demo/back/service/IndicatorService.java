@@ -32,9 +32,9 @@ public class IndicatorService extends BusinessServices {
         String FIId = request.getParameter(KEY_FIELD);
         List<DBDYPO> pos = DBDYDao.selectBySQL2List(actionContext.getConnection(), sql.toString());
         String json = FastJsonUtil.dbdypoList2JsonString(pos);
-        json.replaceAll("I_ID", "id");
-        json.replaceAll("Name", "name");
-        json.replaceAll("P_ID", "pid");
+        json = json.replaceAll("I_ID", "id");
+        json = json.replaceAll("NAME", "name");
+        json = json.replaceAll("P_ID", "pId");
         JSONObject jsonObject = JSONObject.parseObject(json);
         actionContext.getHttpResponse().getWriter().write(jsonObject.get("Rows").toString());
         return CONST_RESULT_AJAX;
