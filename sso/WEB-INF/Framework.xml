@@ -35,7 +35,7 @@
 		<Param name="default" value="true" />
 		<Param name="type" value="mysql"></Param>
 		<Param name="class" value="com.mysql.jdbc.Driver" />
-		<Param name="url" value="jdbc:mysql://xiaoyuanjh.mysql.rds.aliyuncs.com/sso?useunicode=true&amp;characterEncoding=utf-8"       />
+		<Param name="url" value="jdbc:mysql://xiaoyuanjh.mysql.rds.aliyuncs.com/sso?useunicode=true&amp;characterEncoding=utf-8"/>
 		<Param name="user" value="lhft" />
 		<Param name="password" value="123456" />
 		<Param name="filters" value="stat" />
