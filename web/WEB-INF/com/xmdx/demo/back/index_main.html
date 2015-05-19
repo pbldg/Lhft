@@ -34,7 +34,7 @@
                                 colModel:
                                 #{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
                                 tabLogo,
-                                '[{name:"I_ID",index:"I_ID",label:"指标名称ID",width:"60px"},' +
+                                '[{name:"F_ID",index:"F_ID",label:"指标名称ID",width:"60px"},' +
                             '{name:"NAME",index:"NAME",label:"指标名称",width:"60px"},' +
                             '{name:"DESCRIPTION",index:"DESCRIPTION",label:"相关描述",width:"70px"},' +
                             ']'
@@ -43,7 +43,7 @@
         ondblClickRow:function(rowid,iRow,iCol,e){
             selectCheckbox("gridTable",rowid);
             var rowData = $("#gridTable").jqGrid("getRowData", rowid);
-            var url = gotoAction + "&I_ID="+rowData.I_ID+"&TMP="+new Date();
+            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
             popReadInfo(url,"查看指标信息",globalPopWidth,globalPopHeightShort);
         },
         gridComplete: function () {
@@ -85,7 +85,7 @@
             var rowData = $("#gridTable").jqGrid("getRowData", selectedId);
 
 
-            var url = gotoAction + "&I_ID="+rowData.I_ID+"&TMP="+new Date();
+            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
             popSaveInfo(url,"修改指标信息",globalPopWidth,globalPopHeightShort);
 
         });
@@ -95,7 +95,7 @@
             var selectedId = getSelectedCheckbox("gridTable");
             if(!selectOne(selectedId))return;
             var rowData = $("#gridTable").jqGrid("getRowData", selectedId);
-            var url = gotoAction + "&I_ID="+rowData.I_ID+"&TMP="+new Date();
+            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
             popReadInfo(url,"查看指标信息",globalPopWidth,globalPopHeightShort);
         });
 
@@ -115,11 +115,11 @@
             var ids = "";
             jQuery.each(rows, function() {
                 var rowData = $("#gridTable").jqGrid("getRowData", this);
-                ids = ids + rowData.I_ID + ",";
+                ids = ids + rowData.F_ID + ",";
             });
             $.uiconfirm("确定要删除吗？", "确认提示",
                     function() {
-                        var url = delAction + "&I_ID="+ids;
+                        var url = delAction + "&F_ID="+ids;
                         commonDelete(url);
                     },
                     function() {
