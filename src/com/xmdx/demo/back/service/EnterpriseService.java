@@ -11,7 +11,7 @@ import com.xmzy.frameext.simpledb.DBDYPO;
 import com.xmzy.framework.context.ActionContext;
 
 @Service(name="back.enterprise")
-public class UserService extends BusinessServices {
+public class EnterpriseService extends BusinessServices {
 
 	//功能号
 	private static final String authFuncNo = "back.enterprise";
