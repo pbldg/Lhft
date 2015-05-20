@@ -56,6 +56,8 @@
 		});
 		//resize绑定
 		$(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');}).trigger('resize');
+
+	    jQuery("#gridTable").setGridParam().hideCol("ID").trigger("reloadGrid");
 		
 		//判断分页设置
 		checkPager("gridTable");
