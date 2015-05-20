@@ -41,8 +41,8 @@
 	};
     
 	function modifyFunc(event, treeId, treeNode) {
-		$("#O_ID").val(treeNode.id);
-		$("#ORG_NAME").val(treeNode.name);
+		$("#I_ID").val(treeNode.id);
+		$("#NAME").val(treeNode.name);
 		
 		var parentNode = treeNode.getParentNode();
 		if(parentNode) {
@@ -208,7 +208,7 @@
 		$.uiconfirm("确定要删除吗？", "确认提示",
 	      function() {
 			var id = nodes[0].id;
-			var url = delAction + "&O_ID="+id;
+			var url = delAction + "&I_ID="+id;
 			jQuery.ajax({
 		        url: url,   // 提交的页面
 		        data: "", // 从表单中获取数据
@@ -236,7 +236,7 @@
 	function toAdd(){
 		
 		$("#infoForm")[0].reset();
-		$("#O_ID").val("");
+		$("#I_ID").val("");
 		var zTree = $.fn.zTree.getZTreeObj("menuTree");
 		var nodes = zTree.getSelectedNodes();
 		if(nodes.length > 0){
@@ -272,14 +272,14 @@
 						</tr>
 						<!-- ***end*** -->
 						<tr>
-							<td height="33" width="150" align="right" >机构名称：</td>
+							<td height="33" width="150" align="right" >指标名称：</td>
 							<td align="left" >
-								<input type="hidden" style="width:90%;" name="O_ID" id="O_ID" >
-							    <input type="text" style="width:90%;" name="ORG_NAME" id="ORG_NAME" >
+								<input type="hidden" style="width:90%;" name="I_ID" id="I_ID" >
+							    <input type="text" style="width:90%;" name="NAME" id="NAME" >
 							</td>
 						</tr>
 						<tr>
-							<td height="33" align="right" >父机构：</td>
+							<td height="33" align="right" >父指标：</td>
 							<td align="left" >
 								<input type="text" style="width:90%" name="P_NAME" id="P_NAME" readonly="readonly"/>
 								<input type="hidden" style="width:90%" name="P_ID" id="P_ID" />

@@ -88,31 +88,7 @@ public class IndicatorService extends BusinessServices {
 
     @Override
     public int goTo(ActionContext actionContext) throws Exception {
-        DBDYPO indicator = new DBDYPO(TABLE_NAME, KEY_FIELD, actionContext.getHttpRequest());
-        String IId = request.getParameter("I_ID");
-        if (StringUtils.isNotEmpty(IId)) {
-            if ("read".equalsIgnoreCase(actionContext.getStringValue(CONST_RESOURCEAUTH))) {
-
-                checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_ONE);
-            } else {
-
-                checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_FOUR);
-            }
-            DBDYPO[] indicators = DBDYDao.selectByID(actionContext.getConnection(), indicator);
-            if (indicators.length == 0) {
-                actionContext.setErrorContext("您所选择的指标已被删除");
-                return CONST_RESULT_ERROR;
-            }
-            DBDYPO newIndicator = indicators[0];
-            newIndicator.setCmd("U");
-            actionContext.setObjValue("INDICATOR_BEAN", newIndicator);
-        } else {
-            checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_TWO);
-            indicator.setCmd("A");
-            actionContext.setObjValue("INDICATOR_BEAN", po);
-        }
-        actionContext.setStringValue("FORMNAME", "com/xmdx/demo/back/indicator_edit.html");
-        return CONST_RESULT_SUCCESS;
+        return 0;
     }
 
     @Override
