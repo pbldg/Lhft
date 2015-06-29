@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.institution.back.servive;
 
 import com.e9rj.platform.common.services.BusinessServices;
 import com.xmzy.frameext.business.service.annotate.Service;
@@ -8,7 +8,7 @@ import org.apache.commons.lang.StringUtils;
 /**
  * Created by lenovo on 2015/5/5.
  */
-@Service(name="back.fin_instru")
+@Service(name="ins.fin_instru")
 public class FinancialInstrumentService extends BusinessServices {
 
     private final static String AUTH_FUNC_NO = "back.fin_instru";

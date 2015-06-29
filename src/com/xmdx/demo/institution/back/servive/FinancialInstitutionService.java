@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.institution.back.servive;
 
 import com.e9rj.platform.common.GenID;
 import com.e9rj.platform.common.services.BusinessServices;
