@@ -12,7 +12,7 @@
     <init-param>
       <param-name>appCode</param-name>
       <param-value>lhft</param-value>
-    </init-param>   
+    </init-param>
     <init-param>
       <param-name>gaFilePath</param-name>
       <param-value>c:/xmzyframework/xmzyframework.ga</param-value>
