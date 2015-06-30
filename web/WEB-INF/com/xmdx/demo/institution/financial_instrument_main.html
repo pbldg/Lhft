@@ -34,7 +34,7 @@
                                 colModel:
                                 #{com.e9rj.platform.form.GridFormUtil.getColumnSetting(SESSION_USER_BEAN.getSysUserPO().getOpNo(),
                                 tabLogo,
-                                '[{name:"F_ID",index:"F_ID",label:"金融工具名称ID",width:"60px"},' +
+                                '[{name:"FI_ID",index:"FI_ID",label:"金融工具名称ID",width:"60px"},' +
                             '{name:"NAME",index:"NAME",label:"金融工具名称",width:"60px"},' +
                             '{name:"CREATE_TIME",index:"CREATE_TIME",label:"创建时间",width:"70px",align:"center",formatter:"date",formatoptions:{newformat: "Y-m-d H-m-s"}},' +
                             ']'
@@ -43,7 +43,7 @@
         ondblClickRow:function(rowid,iRow,iCol,e){
             selectCheckbox("gridTable",rowid);
             var rowData = $("#gridTable").jqGrid("getRowData", rowid);
-            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
+            var url = gotoAction + "&FI_ID="+rowData.FI_ID+"&TMP="+new Date();
             popReadInfo(url,"查看金融工具信息",globalPopWidth,globalPopHeightShort);
         },
         gridComplete: function () {
@@ -54,6 +54,9 @@
         });
         //resize绑定
         $(window).bind('resize', function(){resizeGrid('gridTable','queryDiv','contentDiv');}).trigger('resize');
+
+        jQuery("#gridTable").setGridParam().hideCol("FI_ID").trigger("reloadGrid");
+
 
         //判断分页设置
         checkPager("gridTable");
@@ -85,7 +88,7 @@
             var rowData = $("#gridTable").jqGrid("getRowData", selectedId);
 
 
-            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
+            var url = gotoAction + "&FI_ID="+rowData.FI_ID+"&TMP="+new Date();
             popSaveInfo(url,"修改金融工具信息",globalPopWidth,globalPopHeightShort);
 
         });
@@ -95,7 +98,7 @@
             var selectedId = getSelectedCheckbox("gridTable");
             if(!selectOne(selectedId))return;
             var rowData = $("#gridTable").jqGrid("getRowData", selectedId);
-            var url = gotoAction + "&F_ID="+rowData.F_ID+"&TMP="+new Date();
+            var url = gotoAction + "&FI_ID="+rowData.FI_ID+"&TMP="+new Date();
             popReadInfo(url,"查看金融工具信息",globalPopWidth,globalPopHeightShort);
         });
 
@@ -115,11 +118,11 @@
             var ids = "";
             jQuery.each(rows, function() {
                 var rowData = $("#gridTable").jqGrid("getRowData", this);
-                ids = ids + rowData.F_ID + ",";
+                ids = ids + rowData.FI_ID + ",";
             });
             $.uiconfirm("确定要删除吗？", "确认提示",
                     function() {
-                        var url = delAction + "&F_ID="+ids;
+                        var url = delAction + "&FI_ID="+ids;
                         commonDelete(url);
                     },
                     function() {
