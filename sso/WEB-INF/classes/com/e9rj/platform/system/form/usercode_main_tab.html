@@ -12,7 +12,7 @@
     <script type="text/javascript">
     var pDialog;//用于弹窗
     var gridHeight=0;//必须要，用于计算grid高度
-    
+
   //树设置
     var setting = {
 			data: {
@@ -29,7 +29,7 @@
 		loadTreeData();
 		//表格样式		
 		$("#infoTable").styleTable();
-	    	
+
 		//把按钮拷到主页面
 		$("#buttonDiv").html("").append($("#buttonset").css("display",""));
 		//初始化按钮事件
@@ -69,24 +69,24 @@
 		//加载树
 		var url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.usercode";
 		$.hkajax(
-		        url,//请求的action路径  
+		        url,//请求的action路径
 		        "CATEGORYNO="+$("#SCATEGORYNO").val(),
 		        {
 			        success:function(data){ //请求成功后处理函数。
-			        	zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
-			        }  
-		        }); 
+			        	zNodes = data;   //把后台封装好的简单Json格式赋给treeNodes
+			        }
+		        });
 		//加载弹出树
 		var url = "HttpChannel?action=QUERY_ACTION&BUSINESS_TYPE=sys.usercode&TREETYPE=pop";
 		$.hkajax(
-		        url,//请求的action路径  
+		        url,//请求的action路径
 		        "CATEGORYNO="+$("#SCATEGORYNO").val(),
 		        {
 			        success:function(data){ //请求成功后处理函数。
-			        	 popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes  
+			        	 popNodes = data;   //把后台封装好的简单Json格式赋给treeNodes
 				         tmpNodes = data;
-			        }  
-		        }); 
+			        }
+		        });
 	}
 	//提交表单
 	function submitThisInfoForm(formid,url){
@@ -133,7 +133,7 @@
 	function showMenu() {
 		tmpNodes = popNodes;
 		$.fn.zTree.init($("#popTree"), setting, tmpNodes);
-		
+
 		var popTree = $.fn.zTree.getZTreeObj("popTree");
 		popTree.expandAll(true);
 		//过滤掉当前节点以子节点
@@ -141,7 +141,7 @@
 		var pNode = popTree.getNodeByParam("id",currId);
 		//zTree.removeChildNodes(pNode);
 		popTree.removeNode(pNode);
-		
+
 		var cityObj = $("#PARENT_NAME");
 		var cityOffset = $("#PARENT_NAME").offset();
 		$("#menuContent").css({left:cityOffset.left + "px", top:cityOffset.top + cityObj.outerHeight() - $("#queryDiv").outerHeight() + "px"}).slideDown("fast");
@@ -195,7 +195,7 @@
 		$("#CATEGORYNO").val($("#SCATEGORYNO").val());
 		$("#CATEGORY_NAME").val($("#SCATEGORYNO").find("option:selected").text());
 		$("#CMD").val("A");
-		
+
 		//设置默认父编号为当前选中节点
 		var zTree = $.fn.zTree.getZTreeObj("menuTree");
 		var nodes = zTree.getSelectedNodes();
@@ -215,9 +215,9 @@
 		var nodes = zTree.getSelectedNodes();
 		var id = nodes[0].id;
 		var url = delAction;
-		
+
 		$.hkajax(
-				url,//请求的action路径  
+				url,//请求的action路径
 		        "CNO="+id+"&CATEGORYNO="+$("#SCATEGORYNO").val(),
 		        {
 			        success:function(data){ //请求成功后处理函数。
@@ -238,10 +238,10 @@
 			        		$("#CATEGORYNO").val($("#SCATEGORYNO").val());
 			        		$("#CATEGORY_NAME").val($("#SCATEGORYNO").find("option:selected").text());
 			            }
-			        }  
+			        }
 		        });
-		
-		
+
+
 	}
     </script>
 </head>
