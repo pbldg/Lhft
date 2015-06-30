@@ -16,7 +16,7 @@ public class FinancialInstrumentService extends BusinessServices {
 
     private final static String AUTH_FUNC_NO = "back.fin_instru";
     private final static String TABLE_NAME = "TB_FINANCIAL_INSTRUMENT";
-    private final static String KEY_FIELD = "F_ID";
+    private final static String KEY_FIELD = "FI_ID";
 
     @Override
     public int init(ActionContext actionContext) throws Exception {
@@ -45,7 +45,7 @@ public class FinancialInstrumentService extends BusinessServices {
     @Override
     public int save(ActionContext actionContext) throws Exception {
         DBDYPO fi = new DBDYPO(TABLE_NAME, KEY_FIELD, request);
-        String fiid = actionContext.getHttpRequest().getParameter("ID");
+        String fiid = actionContext.getHttpRequest().getParameter("FI_ID");
         int result = 0;
         boolean isAdd = false;
         if (StringUtils.isNotEmpty(fiid)) {
@@ -69,7 +69,7 @@ public class FinancialInstrumentService extends BusinessServices {
     @Override
     public int delete(ActionContext actionContext) throws Exception {
         checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_EIGHT);
-        String fiidStr = actionContext.getHttpRequest().getParameter("ID");
+        String fiidStr = actionContext.getHttpRequest().getParameter("FI_ID");
         if (StringUtils.isNotBlank(fiidStr)) {
             String[] fiids = fiidStr.split(",");
             int result = 0;
@@ -87,7 +87,7 @@ public class FinancialInstrumentService extends BusinessServices {
     @Override
     public int goTo(ActionContext actionContext) throws Exception {
         DBDYPO po = new DBDYPO(TABLE_NAME, KEY_FIELD, actionContext.getHttpRequest());
-        String fiid = actionContext.getHttpRequest().getParameter("ID");
+        String fiid = actionContext.getHttpRequest().getParameter("FI_ID");
         if (StringUtils.isNotEmpty(fiid)) {
             if ("read".equalsIgnoreCase(actionContext.getStringValue(CONST_RESOURCEAUTH))) {
                 //查看
