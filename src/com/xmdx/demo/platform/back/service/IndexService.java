@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.platform.back.service;
 
 import com.e9rj.platform.common.services.BusinessServices;
 import com.xmzy.frameext.business.service.annotate.Service;
@@ -8,17 +8,17 @@ import org.apache.commons.lang.StringUtils;
 /**
  * Created by lenovo on 2015/5/6.
  */
-@Service(name="back.model")
-public class ModelService extends BusinessServices {
+@Service(name="back.index")
+public class IndexService extends BusinessServices {
 
-    private final static String AUTH_FUNC_NO = "back.model";
-    private final static String TABLE_NAME = "TB_MODEL";
-    private final static String KEY_FIELD = "M_ID";
+    private final static String AUTH_FUNC_NO = "back.index";
+    private final static String TABLE_NAME = "TB_INDEX";
+    private final static String KEY_FIELD = "I_ID";
     @Override
     public int init(ActionContext actionContext) throws Exception {
         checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_ONE);
         actionContext.setStringValue("tabLogo", AUTH_FUNC_NO);
-        actionContext.setStringValue(CONST_FORMNAME, "com/xmdx/demo/back/model_main.html");
+        actionContext.setStringValue(CONST_FORMNAME, "com/xmdx/demo/back/index_main.html");
         return CONST_RESULT_SUCCESS;
     }
 

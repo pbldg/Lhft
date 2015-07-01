@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.platform.back.service;
 
 import org.apache.commons.lang.StringUtils;
 

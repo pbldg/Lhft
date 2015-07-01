@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.platform.back.service;
 
 import java.util.List;
 

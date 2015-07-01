@@ -1,4 +1,4 @@
-package com.xmdx.demo.back.service;
+package com.xmdx.demo.platform.back.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.e9rj.platform.common.GenID;
