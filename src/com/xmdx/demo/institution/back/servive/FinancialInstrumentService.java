@@ -14,7 +14,7 @@ import org.apache.commons.lang.StringUtils;
 @Service(name = "ins.fin_instru")
 public class FinancialInstrumentService extends BusinessServices {
 
-    private final static String AUTH_FUNC_NO = "back.fin_instru";
+    private final static String AUTH_FUNC_NO = "ins.fin_instru";
     private final static String TABLE_NAME = "TB_FINANCIAL_INSTRUMENT";
     private final static String KEY_FIELD = "FI_ID";
 
@@ -22,7 +22,7 @@ public class FinancialInstrumentService extends BusinessServices {
     public int init(ActionContext actionContext) throws Exception {
         checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_ONE);
         actionContext.setStringValue("tabLogo", AUTH_FUNC_NO);
-        actionContext.setStringValue(CONST_FORMNAME, "com/xmdx/demo/back/financial_instrument_main.html");
+        actionContext.setStringValue(CONST_FORMNAME, "com/xmdx/demo/institution/financial_instrument_main.html");
         return CONST_RESULT_SUCCESS;
     }
 
