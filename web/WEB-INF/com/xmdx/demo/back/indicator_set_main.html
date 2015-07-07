@@ -19,6 +19,8 @@
         var gotoAction = "HttpChannel?action=GOTO_ACTION&BUSINESS_TYPE=enterprise.iss";
         var delAction = "HttpChannel?action=DEL_ACTION&BUSINESS_TYPE=enterprise.iss";
         var saveAction = "HttpChannel?action=SAVE_ACTION&BUSINESS_TYPE=enterprise.iss";
+        var problemsAction = "HttpChannel?action=COMMON_ACTION&BUSINESS_TYPE=enterprise.iss!getProblems";
+
         //树设置
         var setting = {
             view: {
@@ -51,6 +53,22 @@
             } else {
                 $("#P_ID").val("0");
             }
+            $(".problems").children().html("");
+            $.post(problemsAction,{I_ID:treeNode.id},function(data){
+                var indicator=data[0];
+                if(indicator.TYPE==1){
+                    for(var i=1;i<data.length;i++){
+                        $(".problem-selection").append('<p><span class="title">'+data[i].NAME+'</span><input type="radio" value="'+data[i].VALUE+'"></p>');
+                        $(".problem-selection").show();
+                    }
+                }
+                else if(indicator.TYPE==2){
+                    for(var i=1;i<data.length;i++) {
+                        $(".problem-set").append('<p><label>' +data[i].NAME+':</label><input type="text" width="10px"></p>');
+                        $(".problem-set").show();
+                    }
+                }
+            },"json");
         }
 
         var zNodes,popNodes,tmpNodes,menuTree;
@@ -291,6 +309,20 @@
                             </td>
                         </tr>
                     </table>
+                    <div class="problems">
+                        <div class="problem-selection">
+                        </div>
+                        <div class="problem-set">
+                        </div>
+                        <script type="application/javascript">
+                            $(document).ready(function(){
+                                $(".problem-selection input:radio").live("click",function(){
+                                    $(".problem-selection input:radio").attr("checked",false);
+                                    $(this).attr("checked",true);
+                                });
+                            });
+                        </script>
+                    </div>
                 </div>
             </form>
         </td>

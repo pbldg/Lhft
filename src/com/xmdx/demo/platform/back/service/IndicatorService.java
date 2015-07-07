@@ -7,8 +7,10 @@ import com.xmzy.frameext.business.service.annotate.Service;
 import com.xmzy.frameext.json.FastJsonUtil;
 import com.xmzy.frameext.simpledb.DBDYDao;
 import com.xmzy.frameext.simpledb.DBDYPO;
+import com.xmzy.frameext.simpledb.DBDYPOUtil;
 import com.xmzy.framework.context.ActionContext;
 import org.apache.commons.lang.StringUtils;
+import org.omg.CORBA.INV_IDENT;
 
 import java.util.List;
 
@@ -86,6 +88,93 @@ public class IndicatorService extends BusinessServices {
         return CONST_RESULT_AJAX;
     }
 
+    public int getSelectionItem(ActionContext actionContext) throws Exception {
+        String IIDStr = request.getParameter("I_Id");
+        String sql = String.format("select * from tb_indicator_selection where I_ID='%s'", IIDStr);
+        List<DBDYPO> pos = DBDYDao.selectBySQL2List(actionContext.getConnection(), sql);
+        String json = FastJsonUtil.dbdypoList2JsonString(pos);
+        JSONObject jsonObject = JSONObject.parseObject(json);
+        actionContext.getHttpResponse().getWriter().write(jsonObject.get("Rows").toString());
+        return CONST_RESULT_AJAX;
+    }
+
+
+    public int saveSelectionItem(ActionContext actionContext) throws Exception {
+        DBDYPO indicatorSelection = new DBDYPO("TB_INDICATOR_SELECTION", "IS_ID");
+        String ISIdStr = actionContext.getHttpRequest().getParameter("IS_ID");
+        String IIdStr = actionContext.getHttpRequest().getParameter("I_ID");
+        String selectionName = actionContext.getHttpRequest().getParameter("selectionName");
+        String selectionValue = actionContext.getHttpRequest().getParameter("selectionValue");
+        int result;
+        if (StringUtils.isNotBlank(ISIdStr)) {
+            indicatorSelection.set("NAME", selectionName);
+            indicatorSelection.set("VALUE", selectionValue);
+            indicatorSelection.set("IS_ID", ISIdStr);
+            result = DBDYDao.update(actionContext.getConnection(), indicatorSelection);
+        } else {
+            ISIdStr = GenID.genIdString("I", 21);
+            indicatorSelection.set("NAME", selectionName);
+            indicatorSelection.set("VALUE", selectionValue);
+            indicatorSelection.set("IS_ID", ISIdStr);
+            indicatorSelection.set("I_ID", IIdStr);
+            result = DBDYDao.insert(actionContext.getConnection(), indicatorSelection);
+        }
+        if (result == 0) {
+            setMessage(actionContext, "保存选项失败!");
+        } else {
+            setMessage(actionContext, "保存选项成功!");
+        }
+        return CONST_RESULT_AJAX;
+    }
+
+    public int delSelectionItem(ActionContext actionContext) throws Exception{
+        String ISIDStr=request.getParameter("IS_ID");
+        DBDYPO po=new DBDYPO("tb_indicator_selection","IS_ID");
+        int result;
+        po.set("IS_ID",ISIDStr);
+        result=DBDYDao.delete(actionContext.getConnection(), po);
+        if (result==1){
+            setMessage(actionContext,"success");
+        }
+        return  CONST_RESULT_AJAX;
+    }
+
+    public int saveSetItem(ActionContext actionContext)throws Exception{
+        String setName=request.getParameter("setName");
+        String I_Id=request.getParameter("I_ID");
+        String sql=String.format("select * from tb_indicator_set where I_ID='%s'", I_Id);
+        List<DBDYPO>pos=DBDYDao.selectBySQL2List(actionContext.getConnection(), sql);
+        int result;
+        if (!pos.isEmpty()){
+            DBDYPO po=pos.get(0);
+            po.set("NAME",setName);
+            po.set("I_ID",I_Id);
+            result=DBDYDao.update(actionContext.getConnection(),po);
+        }else{
+            DBDYPO po=new DBDYPO("tb_indicator_set","ISST_ID");
+            String ISSTIdStr = GenID.genIdString("I", 21);
+            po.set("ISST_ID",ISSTIdStr);
+            po.set("NAME",setName);
+            po.set("I_ID",I_Id);
+            result=DBDYDao.insert(actionContext.getConnection(),po);
+        }
+        if (result == 0) {
+            setMessage(actionContext, "保存失败!");
+        } else {
+            setMessage(actionContext, "保存成功!");
+        }
+        return  CONST_RESULT_AJAX;
+    }
+
+    public  int getSetItem(ActionContext actionContext)throws Exception{
+        String I_ID=request.getParameter("I_ID");
+        String sql=String.format("select * from tb_indicator_set where I_ID='%s'",I_ID);
+        List<DBDYPO> pos = DBDYDao.selectBySQL2List(actionContext.getConnection(), sql.toString());
+        String json = FastJsonUtil.dbdypoList2JsonString(pos);
+        JSONObject jsonObject = JSONObject.parseObject(json);
+        actionContext.getHttpResponse().getWriter().write(jsonObject.get("Rows").toString());
+        return CONST_RESULT_AJAX;
+    }
     @Override
     public int goTo(ActionContext actionContext) throws Exception {
         return 0;

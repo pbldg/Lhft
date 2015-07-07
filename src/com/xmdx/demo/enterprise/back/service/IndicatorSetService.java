@@ -10,6 +10,7 @@ import com.xmzy.frameext.simpledb.DBDYPO;
 import com.xmzy.framework.context.ActionContext;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,50 +43,37 @@ public class IndicatorSetService extends BusinessServices {
         return CONST_RESULT_AJAX;
     }
 
+    public int getProblems(ActionContext actionContext)throws Exception{
+        String I_ID=request.getParameter("I_ID");
+        String sql=String.format("select * from tb_indicator where I_ID='%s'", I_ID);
+        List<DBDYPO>pos=DBDYDao.selectBySQL2List(actionContext.getConnection(), sql);
+        DBDYPO po=pos.get(0);
+        int type=(Integer)po.get("TYPE");
+        List<DBDYPO>fpos=new ArrayList<DBDYPO>();
+        fpos.add(po);
+        if (type==1){
+            sql=String.format("select * from tb_indicator_selection where I_ID='%s'",I_ID);
+            List<DBDYPO>ppos=DBDYDao.selectBySQL2List(actionContext.getConnection(),sql);
+            fpos.addAll(ppos);
+        }else if (type==2){
+            sql=String.format("select * from tb_indicator_set where I_ID='%S'",I_ID);
+            List<DBDYPO>ppos=DBDYDao.selectBySQL2List(actionContext.getConnection(),sql);
+            fpos.addAll(ppos);
+        }
+        String json=FastJsonUtil.dbdypoList2JsonString(fpos);
+        JSONObject jsonObject=JSONObject.parseObject(json);
+        actionContext.getHttpResponse().getWriter().write(jsonObject.get("Rows").toString());
+        return  CONST_RESULT_AJAX;
+    }
+
     @Override
     public int save(ActionContext actionContext) throws Exception {
-        DBDYPO indicator = new DBDYPO(TABLE_NAME, KEY_FIELD, request);
-        String IId = request.getParameter(KEY_FIELD);
-        int result = 0;
-        if (StringUtils.isNotBlank(IId)) {
-            checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_FOUR);
-            result = DBDYDao.update(actionContext.getConnection(), indicator);
-
-        } else {
-            checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_TWO);
-            IId = GenID.genIdString("I", 21);
-            indicator.set(KEY_FIELD, IId);
-            result = DBDYDao.insert(actionContext.getConnection(), indicator);
-        }
-        if (result == 0) {
-            setMessage(actionContext, "保存指标失败!");
-        } else {
-            setMessage(actionContext, "保存指标成功!");
-        }
-        return CONST_RESULT_AJAX;
+        return 0;
     }
 
     @Override
     public int delete(ActionContext actionContext) throws Exception {
-        checkAuth(actionContext, AUTH_FUNC_NO, RIGHT_EIGHT);
-        String IIdStr = actionContext.getHttpRequest().getParameter("I_ID");
-        int result;
-        if (StringUtils.isNotBlank(IIdStr)) {
-            String[] IIds = IIdStr.split(",");
-            for (String IId : IIds) {
-                if (StringUtils.isNotBlank(IId)) {
-                    DBDYPO indicator = new DBDYPO(TABLE_NAME, KEY_FIELD);
-                    indicator.set(KEY_FIELD, IId);
-                    result = DBDYDao.delete(actionContext.getConnection(), indicator);
-                    if (result == 0) {
-                        setMessage(actionContext, "删除指标失败");
-                        return CONST_RESULT_AJAX;
-                    }
-                }
-            }
-        }
-        setMessage(actionContext, "删除指标成功");
-        return CONST_RESULT_AJAX;
+        return 0;
     }
 
     @Override
